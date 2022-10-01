@@ -192,9 +192,10 @@ def doHighLight(region):
         sleep(highLightTime)
         region.highlightOff()
 
-def iterateGroupSegment(config, autoScrolled):
+def iterateGroupSegment(config, state):
     scrollBarRegion = config["scrollBarRegion"]
     checkHeight = config["checkSize"]
+    autoScrolled = state["autoScrolled"]
     bottomScrollRegion = config["bottomScrollRegion"]
     print " scrollBarRegion = ", scrollBarRegion
     region = config["menuRegion"]
@@ -205,7 +206,8 @@ def iterateGroupSegment(config, autoScrolled):
     startScrollBar = scrollBarRegion.getScreen().capture(scrollBarRegion)
     print " startScrollBar = ", startScrollBar
 
-    selectedY = 0
+    selectedY = region.y
+    overScrolled = False
     print "FInding selected group"
     results = getGroupsFromDisplayedMenu(config)
     if (results["selected"]):
@@ -231,6 +233,9 @@ def iterateGroupSegment(config, autoScrolled):
         print "Starting check is at ", selectedY
     else:
         print "No Selection found"
+        if state["endAtGroup"]:
+            print "Seem to have over scrolled"
+            overScrolled = True
 
     scrollBarRegion = config["scrollBarRegion"]
     maxY = region.y + region.h + checkHeight*0.5
@@ -262,9 +267,13 @@ def iterateGroupSegment(config, autoScrolled):
     steps = []
     if selectedY:
         startY = selectedY
+    elif overScrolled:
+        startY = region.y + checkHeight
+        print "Overscrolled, setting startY to ", startY
     else:
         steps.append(region.y)
         startY = getYforDivider( divisions[0])
+        print "No selected group, setting startY to ", startY
 
     print " starting Y ", startY
     for divider in divisions:
@@ -384,29 +393,39 @@ global autoScrolled
 global checkFailed
 
 def doMain():
-    print("Starting")
+    print("Starting!!")
     global page
     global autoScrolled
     global checkFailed
+    global running
+    global pauseAtEachIteration
+    global highLightTime
     page = 0
     autoScrolled = False
     checkFailed = False
+    running = True
+    pauseAtEachIteration = False
+    highLightTime = 0
+
+    state = {
+        "autoScrolled": autoScrolled
+    }
     
     while not checkFailed and running:
         page = page + 1
         print "Starting Group ", page
-        results = iterateGroupSegment(config, autoScrolled)
-        print "Group ", page, ", elapsed time ", elapsedTime(start), ", results: ", results
+        newState = iterateGroupSegment(config, state)
+        print "Group ", page, ", elapsed time ", elapsedTime(start), ", results: ", newState
 
         if not running:
             break
 
-        if results["checkFailed"]:
+        if newState["checkFailed"]:
             break
 
         doPause()
         
-        autoScrolled = results["autoScrolled"]
+        state = newState
 
     print ("done - checkFailed ", checkFailed, ", running ", running) 
 
