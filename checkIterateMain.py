@@ -237,7 +237,7 @@ def iterateGroupSegment(config, state):
         print "Starting check is at ", selectedY
     else:
         print "No Selection found"
-        if state.get("endAtGroup", False):
+        if state["endAtGroup"]:
             print "Seem to have over scrolled"
             overScrolled = True
 
@@ -327,7 +327,8 @@ def iterateGroupSegment(config, state):
 
     autoScrolled = False
     cancelled = False
-    finished = True
+    finished = False
+    scrollbarUnchanged = False
     if running:
         sleep(0.125)
         scrollbarUnchanged = scrollBarRegion.exists(startScrollBar.getFile(), 1)
