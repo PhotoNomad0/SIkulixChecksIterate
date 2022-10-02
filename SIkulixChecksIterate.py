@@ -1,3 +1,4 @@
 import checkIterateMain
 
-checkIterateMain.doMain()
+finshed = checkIterateMain.doChecks()
+print "doChecks finished with ", finshed

@@ -31,11 +31,13 @@ bottomScrollHeight = 9
 scrollBarRegion = Region(241,54,8,758)
 bottomScrollRegion = Region(scrollBarRegion.x-1, scrollBarRegion.y+scrollBarRegion.h-bottomScrollHeight+8,bottomScrollWidth+2,bottomScrollHeight+2)
 highLightTime = 0 # set to zero to disable highlighting, otherwise set to how many seconds you want to wait on a highlight
+page = 0
+running = True
 
 config = {
         "validateRunning": action,
         "checkSize": 40,
-        "waitForValidate": 0.25,
+        "waitForValidate": 0.01,
         "menuRegion": Region(1,106,240,705),
         "scrollBarRegion": scrollBarRegion,
         "scrollBottomRegion": bottomScrollRegion,
@@ -43,10 +45,12 @@ config = {
         }
 
 ################################
+# init vars
+
+################################
 # program
 
 wait(action)
-running = True
 
 def runHotkey (event) :
     global running
@@ -321,8 +325,10 @@ def iterateGroupSegment(config, state):
             checkFailed = True
             break
 
+    autoScrolled = False
+    cancelled = False
+    finished = True
     if running:
-        autoScrolled = False
         sleep(0.125)
         scrollbarUnchanged = scrollBarRegion.exists(startScrollBar.getFile(), 1)
         if not scrollbarUnchanged:
@@ -337,23 +343,26 @@ def iterateGroupSegment(config, state):
                 atBottom = not bottomScrollRegion.exists(bottomScroll, 1)
                 print "atBottom: " + str(atBottom)
                 if atBottom:
-                    print "Finished"
+                    print "Finished - Scrolled to bottom"
                     global running
-                    running = False                
+                    running = False
+                    finished = True                
                 else:
                     scrollClickAt = Region(scrollBarRegion.x, scrollBarRegion.y + scrollBarRegion.h, scrollBarRegion.w, 2)  
                     print "Scrolling down ", scrollClickAt
                     click(scrollClickAt)
+    else:
+        cancelled = True
 
-    
-        return {
-            "scrollbarUnchanged": scrollbarUnchanged,
-            "checkFailed": checkFailed,
-            "autoScrolled": autoScrolled,
-            "endAtGroup": endAtGroup
-        }
-    
-    return {}
+    return {
+        "scrollbarUnchanged": scrollbarUnchanged,
+        "checkFailed": checkFailed,
+        "autoScrolled": autoScrolled,
+        "endAtGroup": endAtGroup,
+        "cancelled": cancelled,
+        "finished": finished,
+    }
+
 
 def doPause():
     global pauseAtEachIteration
@@ -387,16 +396,21 @@ def doPause():
         elif result == continueNoPause:
             pauseAtEachIteration = False
 
+def elapsedTime(start):
+    secs = time.time() - start
+    if secs < 60:
+        return str(secs) + "secs"
+    else:
+        minutes = secs / 60
+        if minutes < 60:
+            return str(minutes) + "min"
+        else:
+            hours = minutes / 60
+            return str(hours) + "hr"
 
-global page
-global autoScrolled
-global checkFailed
-
-def doMain():
-    print("Starting!!")
+def doChecks():
+    print("Starting Checks...")
     global page
-    global autoScrolled
-    global checkFailed
     global running
     global pauseAtEachIteration
     global highLightTime
@@ -427,19 +441,9 @@ def doMain():
         
         state = newState
 
-    print ("done - checkFailed ", checkFailed, ", running ", running) 
+    print ("Finished with checks, running ", running) 
+    return newState["finished"]
 
 
-def elapsedTime(start):
-    secs = time.time() - start
-    if secs < 60:
-        return str(secs) + "secs"
-    else:
-        minutes = secs / 60
-        if minutes < 60:
-            return str(minutes) + "min"
-        else:
-            hours = minutes / 60
-            return str(hours) + "hr"
                     
-doMain()
+
