@@ -422,7 +422,8 @@ def doChecks():
     highLightTime = 0
 
     state = {
-        "autoScrolled": autoScrolled
+        "autoScrolled": autoScrolled,
+        "endAtGroup": None,
     }
     
     while not checkFailed and running:
