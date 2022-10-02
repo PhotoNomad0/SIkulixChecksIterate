@@ -24,7 +24,7 @@ afterSelectedDivider = "afterSelectedDivider.png"
 ################################
 # initial config
 
-Settings.MouseMoveDelay = 0.125
+Settings.MouseMoveDelay = 0.05
 pauseAtEachIteration = False
 bottomScrollWidth = 9
 bottomScrollHeight = 9
@@ -237,7 +237,7 @@ def iterateGroupSegment(config, state):
         print "Starting check is at ", selectedY
     else:
         print "No Selection found"
-        if state["endAtGroup"]:
+        if state.get("endAtGroup", False):
             print "Seem to have over scrolled"
             overScrolled = True
 
