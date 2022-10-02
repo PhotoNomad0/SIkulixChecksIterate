@@ -24,7 +24,7 @@ afterSelectedDivider = "afterSelectedDivider.png"
 ################################
 # initial config
 
-Settings.MouseMoveDelay = 0.05
+Settings.MouseMoveDelay = 0
 pauseAtEachIteration = False
 bottomScrollWidth = 9
 bottomScrollHeight = 9
