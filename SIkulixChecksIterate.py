@@ -1,5 +1,7 @@
 from sikuli.Sikuli import *
 import checkIterateMain
+import time
+start = time.time()
 
 # run with:
 #java -jar %HOMEPATH%\Development\SikulixIDE\sikulixide-2.0.5.jar -c -r %HOMEPATH%\Development\SikulixTesting\SIkulixChecksIterate.sikuli
@@ -21,6 +23,9 @@ toolsArea = Region(686,166,545,533)
 # downArrowOffs = Pattern("downArrow.png").targetOffset(41,-1)
 
 glFirstPopup = Region(854,343,215,27)
+projectNameArea = Region(735,53,186,22)
+projectFolder = "images/projectFolder.png"
+headerArea = Region(0,28,1536,79)
 
 def getLaunchButtons():
     launches = checkIterateMain.findAllImagesBase(toolsArea, [], launchButton)
@@ -35,17 +40,23 @@ def getGlPopupAreaFromLaunchButton(launchButton, pos):
     glBoxActual = Region(launchButton.x + launchButton.w/2 - 337, launchButton.y + launchButton.h/2 + 18*pos - 4, glBox.w + 40, glBox.h)
     return glBoxActual
 
-def getGlPopupText(launchButton, pos):
-    region = getGlPopupAreaFromLaunchButton(launchButton, pos)
-    region.highlight()
-    sleep(2)
-    region.highlightOff()
+def getPopupText(region, highlight):
+    if highlight:
+        region.highlight()
+        sleep(highlight)
+        region.highlightOff()
+    
     text = region.text().strip()
     print "At y=", region.y, " found text: '", text, "'"
     return {
         "region": region,
         "text": text,
     }
+
+def getGlPopupText(launchButton, pos):
+    region = getGlPopupAreaFromLaunchButton(launchButton, pos)
+    results = getPopupText(region, 1)
+    return results
         
 def getFirstLaunchButton():
     launches = getLaunchButtons()
@@ -81,9 +92,24 @@ def getFirstLaunchButtonInfo():
 checkTNotesArray = [True, False]
 finshed = False
 runSIngleCheck = False
+currentProject = 'Unknown'
+
 print "Startup!"
+times = {}
 choice = popAsk ("Are you ready to start?")
 if choice:
+    sleep(1)
+    projectFolders = checkIterateMain.findAllImagesBase(headerArea, [], projectFolder)
+    print ("projectFolders buttons found ", len(projectFolders))
+    if len(projectFolders):
+        folder = projectFolders[0]
+        region = Region(folder.x + folder.w, folder.y, 150, folder.h, )
+        results = getPopupText(region, 1)
+        currentProject = results["text"]
+        print "Current Project: ", currentProject
+    else:
+        print "no project folders found"
+
     for checkTNotes in checkTNotesArray:
         if checkTNotes:
             click(scrollUp)
@@ -101,15 +127,22 @@ if choice:
                 click(results["glTextArea"])
                 sleep(1)
                 popup = getGlPopupText(results["launchButton"], 0)
+                print "popup= ", popup
                 click(popup["region"])
+                sleep(1)
                 results = getFirstLaunchButtonInfo()
                 
             click(results["launchButton"])
+            sleep(1)
             
         toolNameStr = toolName.text().strip()
         print "Running tool '", toolNameStr, "'"
         
+        toolStart = time.time()
         finshed = checkIterateMain.doChecks()
+        elapsed = checkIterateMain.elapsedTime(toolStart)
+        times[toolNameStr] = elapsed
+        print "Tool ", toolNameStr, " took ", elapsed
         if not finshed:
             break
         
@@ -126,3 +159,7 @@ if choice:
     choice = popAsk (final)
 else:
     print "Cancelled"
+
+print "Finished testing ", currentProject
+print "Times= ", times
+print "Total run time= ", checkIterateMain.elapsedTime(start)
