@@ -12,14 +12,14 @@ start = time.time()
 ################################
 # images
 
-action = Pattern("Running.png")
-bottomScroll = "bottomScroll.png"
-selectedGroupExpanded = Pattern("SelectedGroupExpanded.png").similar(0.83)
-selectedGroupCollapsed = Pattern("SelectedGroupCollapsed.png").similar(0.83)
-deselectedGroupCollapsed = Pattern("deselectedGroupCollapsed.png").similar(0.83)
-unselectedDivider = Pattern("unselectedDivider.png").similar(0.74)
-beforeSelectedDivider = "beforeSelectedDivider.png"
-afterSelectedDivider = "afterSelectedDivider.png"
+action = Pattern("images/Running.png")
+bottomScroll = "images/bottomScroll.png"
+selectedGroupExpanded = Pattern("images/SelectedGroupExpanded.png").similar(0.83)
+selectedGroupCollapsed = Pattern("images/SelectedGroupCollapsed.png").similar(0.83)
+deselectedGroupCollapsed = Pattern("images/deselectedGroupCollapsed.png").similar(0.83)
+unselectedDivider = Pattern("images/unselectedDivider.png").similar(0.74)
+beforeSelectedDivider = "images/beforeSelectedDivider.png"
+afterSelectedDivider = "images/afterSelectedDivider.png"
 
 ################################
 # initial config
@@ -49,8 +49,6 @@ config = {
 
 ################################
 # program
-
-wait(action)
 
 def runHotkey (event) :
     global running
@@ -89,6 +87,9 @@ print 'Running'
 def by_y(group):
     return group["match"].y
 
+def by_y_item(item):
+    return item.y
+
 def findAllImages(region, groups, image, selected, expanded):
     print "searching for expanded: ", expanded, ", selected ", selected
     region.findAll(image)
@@ -101,6 +102,17 @@ def findAllImages(region, groups, image, selected, expanded):
                     "selected": selected,
                     "match": match
                     })
+    return groups
+
+def findAllImagesBase(region, groups, image):
+    region.findAll(image)
+    found = region.getLastMatches()
+    while found and found.hasNext():
+        match = found.next()
+        groups.append(match)
+    print "groups=", len(groups), " found"
+    if len(groups):
+        groups = sorted(groups, key=by_y_item) # sort keys by y order
     return groups
 
 def getGroupsFromDisplayedMenu(config):
@@ -427,6 +439,8 @@ def doChecks():
         "endAtGroup": None,
     }
     
+    wait(action)
+
     while not checkFailed and running:
         page = page + 1
         print "Starting Group ", page
