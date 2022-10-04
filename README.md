@@ -1,5 +1,5 @@
 - This replaces checksIterate
-- do **start.bat** to run - may have to edit path to sikulix jar file
+- execute `start.bat` to run - you may have to edit path to sikulix jar file
 - files are saved to log folder for current date
 - images are saved in images folder
 
