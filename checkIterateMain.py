@@ -20,6 +20,7 @@ deselectedGroupCollapsed = Pattern("images/deselectedGroupCollapsed.png").simila
 unselectedDivider = Pattern("images/unselectedDivider.png").similar(0.74)
 beforeSelectedDivider = "images/beforeSelectedDivider.png"
 afterSelectedDivider = "images/afterSelectedDivider.png"
+alertDialog = Pattern("images/alertDialog.png").similar(0.58)
 
 ################################
 # initial config
@@ -30,6 +31,8 @@ bottomScrollWidth = 9
 bottomScrollHeight = 9
 scrollBarRegion = Region(241,54,8,758)
 bottomScrollRegion = Region(scrollBarRegion.x-1, scrollBarRegion.y+scrollBarRegion.h-bottomScrollHeight+8,bottomScrollWidth+2,bottomScrollHeight+2)
+alertDialogRegion = Region(366,193,805,450)
+actionsRegion = Region(765,13,769,50)
 highLightTime = 0 # set to zero to disable highlighting, otherwise set to how many seconds you want to wait on a highlight
 page = 0
 running = True
@@ -178,7 +181,7 @@ def verifyNotCrashed(config):
     success = False
     sleep(waitForValidate)
     try:
-        wait(action)
+        actionsRegion.wait(action)
     except:
         print "App has crashed"
         success = False
@@ -367,6 +370,12 @@ def iterateGroupSegment(config, state):
     else:
         cancelled = True
 
+    alertDialogShown = False
+    if alertDialogRegion.exists(alertDialog):
+        print "Alert Dialog is showing!"
+        alertDialogShown = True
+        checkFailed = True
+
     return {
         "scrollbarUnchanged": scrollbarUnchanged,
         "checkFailed": checkFailed,
@@ -374,6 +383,7 @@ def iterateGroupSegment(config, state):
         "endAtGroup": endAtGroup,
         "cancelled": cancelled,
         "finished": finished,
+        "alertDialogShown": alertDialogShown,
     }
 
 
@@ -433,13 +443,14 @@ def doChecks():
     running = True
     pauseAtEachIteration = False
     highLightTime = 0
+    newState = {}
 
     state = {
         "autoScrolled": autoScrolled,
         "endAtGroup": None,
     }
     
-    wait(action)
+    actionsRegion.wait(action) # make sure tCore is visible
 
     while not checkFailed and running:
         page = page + 1
@@ -450,16 +461,11 @@ def doChecks():
         if not running:
             break
 
-        if newState["checkFailed"]:
-            break
+        checkFailed = newState["checkFailed"]
 
         doPause()
         
         state = newState
 
-    print ("Finished with checks, running ", running) 
-    return newState["finished"]
-
-
-                    
-
+    print ("Finished with checks, running ", running, ", checkFailed ", checkFailed) 
+    return newState

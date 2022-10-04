@@ -6,6 +6,7 @@ start = time.time()
 # run with:
 #java -jar %HOMEPATH%\Development\SikulixIDE\sikulixide-2.0.5.jar -c -r %HOMEPATH%\Development\SikulixTesting\SIkulixChecksIterate.sikuli
 
+# Region(370,205,798,430)
 
 tn = "images/tnLabel.png"
 toolName = Region(648,29,115,22)
@@ -18,9 +19,6 @@ launchButton = "images/launchButton.png"
 glBox = Region(834,489,217,24)
 
 toolsArea = Region(686,166,545,533)
-
-# downArrow = "downArrow.png"
-# downArrowOffs = Pattern("downArrow.png").targetOffset(41,-1)
 
 glFirstPopup = Region(854,343,215,27)
 projectNameArea = Region(735,53,186,22)
@@ -91,8 +89,9 @@ def getFirstLaunchButtonInfo():
 
 checkTNotesArray = [True, False]
 finshed = False
-runSIngleCheck = False
+runSingleCheck = False
 currentProject = 'Unknown'
+finalState = {}
 
 print "Startup!"
 times = {}
@@ -120,7 +119,7 @@ if choice:
         results = getFirstLaunchButtonInfo()
         if not results:
             print "Launch button not found, try starting checking"
-            runSIngleCheck = True
+            runSingleCheck = True
         else:
             if results["glText"] == 'Select Gateway Language':
                 print "No Gl Selected"
@@ -139,14 +138,17 @@ if choice:
         print "Running tool '", toolNameStr, "'"
         
         toolStart = time.time()
-        finshed = checkIterateMain.doChecks()
+        finalState = checkIterateMain.doChecks()
+        finished = finalState["finished"]
+        checkFailed = finalState["checkFailed"]
         elapsed = checkIterateMain.elapsedTime(toolStart)
         times[toolNameStr] = elapsed
         print "Tool ", toolNameStr, " took ", elapsed
-        if not finshed:
+        if not finished or checkFailed:
+            print "Checks failed"
             break
         
-        if runSIngleCheck:
+        if runSingleCheck:
             print "Just ran a single check"
             break
         else:
@@ -154,7 +156,7 @@ if choice:
             click(toolName)
             sleep(2)
 
-    final = "doChecks finished with " + str(finshed)
+    final = "doChecks finished with " + str(finalState)
     print(final)
     choice = popAsk (final)
 else:
