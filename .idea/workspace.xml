@@ -2,8 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="e936a502-317f-4b47-8f5a-4cbf517af585" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/SIkulixChecksIterate.py" beforeDir="false" afterPath="$PROJECT_DIR$/SIkulixChecksIterate.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/checkIterateMain.py" beforeDir="false" afterPath="$PROJECT_DIR$/checkIterateMain.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/downArrow.png" beforeDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -88,7 +89,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1664877630362</updated>
-      <workItem from="1664877631521" duration="1465000" />
+      <workItem from="1664877631521" duration="2100000" />
     </task>
     <task id="LOCAL-00001" summary="Added check for alert dialog being shown.  Narrowed search area for actions button">
       <created>1664884226156</created>
@@ -97,7 +98,14 @@
       <option name="project" value="LOCAL" />
       <updated>1664884226156</updated>
     </task>
-    <option name="localTasksCounter" value="2" />
+    <task id="LOCAL-00002" summary="cleanup">
+      <created>1664885033528</created>
+      <option name="number" value="00002" />
+      <option name="presentableId" value="LOCAL-00002" />
+      <option name="project" value="LOCAL" />
+      <updated>1664885033528</updated>
+    </task>
+    <option name="localTasksCounter" value="3" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -105,7 +113,8 @@
   </component>
   <component name="VcsManagerConfiguration">
     <MESSAGE value="Added check for alert dialog being shown.  Narrowed search area for actions button" />
-    <option name="LAST_COMMIT_MESSAGE" value="Added check for alert dialog being shown.  Narrowed search area for actions button" />
+    <MESSAGE value="cleanup" />
+    <option name="LAST_COMMIT_MESSAGE" value="cleanup" />
   </component>
   <component name="VgoProject">
     <settings-migrated>true</settings-migrated>

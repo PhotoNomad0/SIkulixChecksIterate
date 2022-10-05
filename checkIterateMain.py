@@ -21,6 +21,10 @@ unselectedDivider = Pattern("images/unselectedDivider.png").similar(0.74)
 beforeSelectedDivider = "images/beforeSelectedDivider.png"
 afterSelectedDivider = "images/afterSelectedDivider.png"
 alertDialog = Pattern("images/alertDialog.png").similar(0.58)
+projectFolder = "images/projectFolder.png"
+launchButton = Pattern("images/launchButton.png").similar(0.86)
+unchecked = "images/unchecked.png"
+partialChecked = Pattern("images/partialChecked.png").similar(0.92)
 
 ################################
 # initial config
@@ -29,10 +33,21 @@ Settings.MouseMoveDelay = 0
 pauseAtEachIteration = False
 bottomScrollWidth = 9
 bottomScrollHeight = 9
+togglesXOffset = -465
+togglesYOffset = -267
 scrollBarRegion = Region(241,54,8,758)
 bottomScrollRegion = Region(scrollBarRegion.x-1, scrollBarRegion.y+scrollBarRegion.h-bottomScrollHeight+8,bottomScrollWidth+2,bottomScrollHeight+2)
 alertDialogRegion = Region(366,193,805,450)
 actionsRegion = Region(765,13,769,50)
+headerArea = Region(0,28,1536,79)
+scrollUp = Location(1241, 188)
+scrollDown = Location(1242, 659)
+glBox = Region(834,489,217,24)
+toolsArea = Region(686,166,545,533)
+glFirstPopup = Region(854,343,215,27)
+projectNameArea = Region(735,53,186,22)
+toolName = Region(648,29,115,22)
+mouseOffMenu = Region(800,200,1,1)
 highLightTime = 0 # set to zero to disable highlighting, otherwise set to how many seconds you want to wait on a highlight
 page = 0
 running = True
@@ -199,7 +214,7 @@ def doCheck(config, y):
     success_ = False
     region = Region(30, y - 4, 169, 25)
     doHighLight(region)
-    text = region.text()
+    text = region.text().encode('UTF-8')
     print "At y=", y, " found text: ", text
     click(region)
     success_ = verifyNotCrashed(config)
@@ -211,6 +226,11 @@ def doHighLight(region):
         sleep(highLightTime)
         region.highlightOff()
 
+def doMouseMoveOff():
+    # move mouse off of menu to remove issues with hover text
+    mouseMove(mouseOffMenu)
+    sleep(0.125)
+
 def iterateGroupSegment(config, state):
     scrollBarRegion = config["scrollBarRegion"]
     checkHeight = config["checkSize"]
@@ -221,7 +241,7 @@ def iterateGroupSegment(config, state):
     print " region = ", region
     startY = region.y + checkHeight * 0.3
     print "startY = ", startY
-    sleep(0.125)
+    doMouseMoveOff()
     startScrollBar = scrollBarRegion.getScreen().capture(scrollBarRegion)
     print " startScrollBar = ", startScrollBar
 
@@ -233,7 +253,7 @@ def iterateGroupSegment(config, state):
         match = results["selected"]["match"]
         region_ = Region(37, match.y - 10, 169, 35)
         doHighLight(region_)
-        text = region_.text()
+        text = region_.text().encode('UTF-8')
         print "Starting at group ", text, " at ", region_
         
         if (results["collapsed"]):
@@ -274,7 +294,7 @@ def iterateGroupSegment(config, state):
             print "maxY = ", maxY
             endAtGroup = match
             region_ = Region(30, endAtGroup.y, 169, 30)
-            text = region_.text()
+            text = region_.text().encode('UTF-8')
             print "Ending at group ", text, " at ", region_
             break
     
@@ -345,7 +365,7 @@ def iterateGroupSegment(config, state):
     finished = False
     scrollbarUnchanged = False
     if running:
-        sleep(0.125)
+        doMouseMoveOff()
         scrollbarUnchanged = scrollBarRegion.exists(startScrollBar.getFile(), 1)
         if not scrollbarUnchanged:
             print "Scrollbar moved"
@@ -469,3 +489,202 @@ def doChecks():
 
     print ("Finished with checks, running ", running, ", checkFailed ", checkFailed) 
     return newState
+
+def getLaunchButtons():
+    launches = findAllImagesBase(toolsArea, [], launchButton)
+    print ("launch buttons found ", len(launches))
+    return launches
+
+def getGlTextAreaFromLaunchButton(launchButton):
+    glBoxActual = Region(launchButton.x + launchButton.w/2 - 337, launchButton.y + launchButton.h/2 - 2, glBox.w, glBox.h)
+    return glBoxActual
+
+def getGlPopupAreaFromLaunchButton(launchButton, pos):
+    glBoxActual = Region(launchButton.x + launchButton.w/2 - 337, launchButton.y + launchButton.h/2 + (glBox.h+8)*pos - 4, glBox.w + 40, glBox.h)
+    return glBoxActual
+
+def getPopupText(region, highlight):
+    if highlight:
+        region.highlight()
+        sleep(highlight)
+        region.highlightOff()
+    
+    text = region.text().strip().encode('UTF-8')
+    print "At y=", region.y, " found text: '", text, "'"
+    return {
+        "region": region,
+        "text": text,
+    }
+
+def getGlPopupText(launchButton, pos):
+    region = getGlPopupAreaFromLaunchButton(launchButton, pos)
+    results = getPopupText(region, 1)
+    return results
+        
+def checkAll(launchButton):
+    checkArea = Region(launchButton.x + launchButton.w/2 + togglesXOffset, launchButton.y + togglesYOffset, launchButton.w/2 - togglesXOffset, -togglesYOffset)
+    #checkArea.highlight()
+    #sleep(5)
+    for image in [partialChecked, unchecked]:
+        print "image ", image
+        buttons = findAllImagesBase(checkArea, [], image)
+        print "buttons ", buttons
+        for button in buttons:
+            button.click()
+
+def getFirstLaunchButton():
+    launches = getLaunchButtons()
+    if (len(launches)):
+        button = launches[0]
+        return button
+    else:
+        print ("No launch buttons found")
+        return None
+
+def getFirstLaunchButtonInfo():
+    launchButton_ = getFirstLaunchButton()
+    if launchButton_:
+        region = getGlTextAreaFromLaunchButton(launchButton_)
+        region.highlight()
+        sleep(2)
+        region.highlightOff()
+        text = region.text().strip().encode('UTF-8')
+        print "At y=", region.y, " found text: '", text, "'"
+        # click(launchButton_)
+        return {
+            "launchButton": launchButton_,
+            "glTextArea": region,
+            "glText": text
+        }
+    else:
+        print "No Launch button found"
+        return None
+
+# getFirstLaunchButton()
+# exit()
+
+def getGlPopupOptions(launchButton, max):
+    popups = []
+    for i in range(max):
+        popup = getGlPopupText(launchButton, i)
+        popups.append(popup)
+    return popups
+
+def checkOpenProject(langID):
+    checkTNotesArray = [True, False]
+    finshed = False
+    runSingleCheck = False
+    currentProject = 'Unknown'
+    finalState = {}
+    projectStart = time.time()
+
+    print "Startup!"
+    times = {}
+    choice = popAsk ("Are you ready to start?")
+    if choice:
+        sleep(1)
+        projectFolders = findAllImagesBase(headerArea, [], projectFolder)
+        print ("projectFolders buttons found ", len(projectFolders))
+        if len(projectFolders):
+            folder = projectFolders[0]
+            region = Region(folder.x + folder.w, folder.y, 150, folder.h, )
+            results = getPopupText(region, 1)
+            currentProject = results["text"]
+            print "Current Project: ", currentProject
+        else:
+            print "no project folders found"
+
+        for checkTNotes in checkTNotesArray:
+            if checkTNotes:
+                click(scrollUp)
+            else:
+                click(scrollDown)
+            sleep(2)
+
+            
+            launchButton_ = getFirstLaunchButtonInfo()
+            if not launchButton_:
+                print "Launch button not found, try starting checking"
+                runSingleCheck = True
+            else:
+                currentGL = launchButton_["glText"]
+                wrongGL = False
+                matchLangStr = "(" + langID + ")"
+                print "Matching in GL: ", matchLangStr
+                if currentGL == 'Select Gateway Language':
+                    print "No Gl Selected, want ", langID
+                    wrongGL = True
+                elif not (matchLangStr in currentGL):
+                    print "Wrong Gl Selected '", currentGL, "', want ", langID
+                    wrongGL = True
+
+                if wrongGL:
+                    click(launchButton_["glTextArea"])
+                    sleep(1)
+                    popups = getGlPopupOptions(launchButton_["launchButton"], 6)
+                    print "popups= ", popups
+                    pos = -1
+                    glOptionRange = None
+                    for i in range(len(popups)):
+                        print i
+                        popup = popups[i]
+                        glText = popup["text"]
+                        print "Found popup option ", glText
+                        if matchLangStr in glText:
+                            print "found Match at ", i
+                            pos = i
+                            break
+
+                    if pos < 0:
+                        print "Match not found, default to 0"
+                        pos = 0
+
+                    popup = popups[pos]
+                    print "popup= ", popup
+
+                    click(popup["region"])
+                    sleep(1)
+                    launchButton_ = getFirstLaunchButtonInfo()
+                    
+                sleep(1)
+                checkAll(launchButton_["launchButton"])
+
+                click(launchButton_["launchButton"])
+                sleep(1)
+                
+            toolNameStr = toolName.text().strip().encode('UTF-8')
+            print "Running tool '", toolNameStr, "'"
+            
+            toolStart = time.time()
+
+            finalState = doChecks()
+
+            finished = finalState["finished"]
+            checkFailed = finalState["checkFailed"]
+            elapsed = elapsedTime(toolStart)
+            times[toolNameStr] = elapsed
+            print "Tool ", toolNameStr, " took ", elapsed
+            if not finished or checkFailed:
+                print "Checks failed"
+                break
+            
+            if runSingleCheck:
+                print "Just ran a single check"
+                break
+            else:
+                print "Return to tools card"
+                click(toolName)
+                sleep(2)
+
+        final = "doChecks finished with " + str(finalState)
+        print(final)
+        choice = popAsk (final)
+    else:
+        print "Cancelled"
+
+    print "Finished testing ", currentProject
+    print "Times= ", times
+    print "Project run time= ", elapsedTime(projectStart)
+    finalState["runSingleCheck"] = runSingleCheck
+    return finalState
+
