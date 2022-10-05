@@ -4,6 +4,8 @@
 # Note: Use control-F11 to toggle pausing
 
 from sikuli.Sikuli import *
+import java.awt.Robot as JRobot
+from java.awt import Color
 
 import time
 #import utils
@@ -48,22 +50,24 @@ glFirstPopup = Region(854,343,215,27)
 projectNameArea = Region(735,53,186,22)
 toolName = Region(648,29,115,22)
 mouseOffMenu = Region(800,200,1,1)
+blueColor = Color(25, 87, 158).getRGB()
+whiteColor = Color(255, 255, 255).getRGB()
+menuSelectedColor = Color(33,150,243).getRGB()
+menuDeselectedColor = Color(116,116,116).getRGB()
 highLightTime = 0 # set to zero to disable highlighting, otherwise set to how many seconds you want to wait on a highlight
 page = 0
 running = True
+myRobot = JRobot()
 
 config = {
-        "validateRunning": action,
-        "checkSize": 40,
-        "waitForValidate": 0.01,
-        "menuRegion": Region(1,106,240,705),
-        "scrollBarRegion": scrollBarRegion,
-        "scrollBottomRegion": bottomScrollRegion,
-        "bottomScrollRegion": bottomScrollRegion,
-        }
-
-################################
-# init vars
+    "validateRunning": action,
+    "checkSize": 40,
+    "waitForValidate": 0.01,
+    "menuRegion": Region(1,106,240,705),
+    "scrollBarRegion": scrollBarRegion,
+    "scrollBottomRegion": bottomScrollRegion,
+    "bottomScrollRegion": bottomScrollRegion,
+}
 
 ################################
 # program
@@ -82,11 +86,11 @@ def runTogglePause (event) :
 
 Env.addHotkey(Key.F11, KeyModifier.CTRL, runTogglePause)
 
-print "scrollBarRegion=", scrollBarRegion
-print "bottomScroll = ", bottomScroll
-print "bottomScrollRegion=", bottomScrollRegion
+# print "scrollBarRegion=", scrollBarRegion
+# print "bottomScroll = ", bottomScroll
+# print "bottomScrollRegion=", bottomScrollRegion
 
-print 'Running'
+# print 'Running'
 
 # test scroll bottom
 #while running:
@@ -108,6 +112,31 @@ def by_y(group):
 def by_y_item(item):
     return item.y
 
+def getColor(region):
+    p = region.getCenter()
+    color = myRobot.getPixelColor(p.x, p.y)
+    return color
+
+def getColorRGB(region):
+    color = getColor(region)
+    rgb = color.getRGB()
+    return rgb
+
+def lookupColor(rgb):
+    colorOptions = {
+        "blueColor": blueColor,
+        "whiteColor": whiteColor,
+        "menuSelectedColor": menuSelectedColor,
+        "menuDeselectedColor": menuDeselectedColor
+    }
+
+    for key in colorOptions:
+        color = colorOptions[key]
+        if color == rgb:
+            return key
+
+    return "UNKNOWN: " + str(rgb)
+    
 def findAllImages(region, groups, image, selected, expanded):
     print "searching for expanded: ", expanded, ", selected ", selected
     region.findAll(image)
@@ -212,11 +241,15 @@ def getYforDivider(divider):
 
 def doCheck(config, y):
     success_ = False
-    region = Region(30, y - 4, 169, 25)
-    doHighLight(region)
-    text = region.text().encode('UTF-8')
+    textArea = Region(30, y - 4, 169, 25)
+    doHighLight(textArea)
+    text = textArea.text().encode('UTF-8')
     print "At y=", y, " found text: ", text
-    click(region)
+    # examine color
+    # colorArea = Region(textArea.x, textArea.y, 1, 1)
+    # color = getColor(colorArea);
+    # print "backbground color ", color, " - ", lookupColor(color.getRGB())
+    click(textArea)
     success_ = verifyNotCrashed(config)
     return (success_)
 
