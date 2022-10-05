@@ -27,6 +27,8 @@ projectFolder = "images/projectFolder.png"
 launchButton = Pattern("images/launchButton.png").similar(0.86)
 unchecked = "images/unchecked.png"
 partialChecked = Pattern("images/partialChecked.png").similar(0.92)
+continueButton = "images/continueButton.png"
+okButton = "images/okButton.png"
 
 ################################
 # initial config
@@ -52,8 +54,11 @@ toolName = Region(648,29,115,22)
 mouseOffMenu = Region(800,200,1,1)
 blueColor = Color(25, 87, 158).getRGB()
 whiteColor = Color(255, 255, 255).getRGB()
-menuSelectedColor = Color(33,150,243).getRGB()
-menuDeselectedColor = Color(116,116,116).getRGB()
+checkSelectedColor = Color(33,150,243).getRGB()
+checkDeselectedColor = Color(116,116,116).getRGB()
+groupDeselectedColor = Color(51,51,51).getRGB()
+messageRegion = Region(570,308,499,23)
+alertRegion = Region(360,186,437,550)
 highLightTime = 0 # set to zero to disable highlighting, otherwise set to how many seconds you want to wait on a highlight
 page = 0
 running = True
@@ -106,6 +111,31 @@ Env.addHotkey(Key.F11, KeyModifier.CTRL, runTogglePause)
 #        print "Cancelled"
 #        exit()
 
+def getRGB(color):
+    colorRGB = ~color ^ 0x00FFFFFF
+    red = (colorRGB >> 16) & 0xFF
+    green = (colorRGB >> 8) & 0xFF
+    blue = colorRGB & 0xFF
+    return {
+        "red": red,
+        "green": green,
+        "blue": blue
+    }
+
+def colorDiff(color0, color1):
+    color0_ = getRGB(color0)
+    color1_ = getRGB(color1)
+    colors = ["red","green","blue"]
+    sumSQ = 0
+    for key in colors:
+        colorA = color0_[key]
+        colorB = color1_[key]
+        sq = (colorA - colorB)**2
+        # print key, " sq= ", sq
+        sumSQ = sumSQ + sq
+    
+    return sumSQ/255.0
+
 def by_y(group):
     return group["match"].y
 
@@ -126,13 +156,21 @@ def lookupColor(rgb):
     colorOptions = {
         "blueColor": blueColor,
         "whiteColor": whiteColor,
-        "menuSelectedColor": menuSelectedColor,
-        "menuDeselectedColor": menuDeselectedColor
+        "checkSelectedColor": checkSelectedColor,
+        "checkDeselectedColor": checkDeselectedColor,
+        "groupDeselectedColor": groupDeselectedColor
     }
 
     for key in colorOptions:
         color = colorOptions[key]
         if color == rgb:
+            return key
+
+    # try again with some tolerance
+    tolerance = 1.5
+    for key in colorOptions:
+        color = colorOptions[key]
+        if colorDiff(color, rgb) < tolerance:
             return key
 
     return "UNKNOWN: " + str(rgb)
@@ -161,6 +199,13 @@ def findAllImagesBase(region, groups, image):
     if len(groups):
         groups = sorted(groups, key=by_y_item) # sort keys by y order
     return groups
+
+def findFirstImage(region, image):
+    found = findAllImagesBase(region, [], image)
+    if len(found):
+        found = found[0]
+        return found
+    return None
 
 def getGroupsFromDisplayedMenu(config):
     region = config["menuRegion"]
@@ -241,14 +286,22 @@ def getYforDivider(divider):
 
 def doCheck(config, y):
     success_ = False
-    textArea = Region(30, y - 4, 169, 25)
+    textArea = Region(32, y - 2, 169, 25)
     doHighLight(textArea)
     text = textArea.text().encode('UTF-8')
     print "At y=", y, " found text: ", text
+
     # examine color
-    # colorArea = Region(textArea.x, textArea.y, 1, 1)
-    # color = getColor(colorArea);
-    # print "backbground color ", color, " - ", lookupColor(color.getRGB())
+    colorArea = Region(textArea.x, textArea.y, 1, 1)
+    color = getColor(colorArea)
+    colorStr = lookupColor(color.getRGB())
+    # print "backbground color ", color, " - ", colorStr
+    if ("UNKNOWN" in colorStr):
+        colorArea.highlight()
+        message = "Unknown color " + colorStr + " for " + str(color)
+        pauseMsg(message)
+        colorArea.highlightOff()
+
     click(textArea)
     success_ = verifyNotCrashed(config)
     return (success_)
@@ -262,7 +315,7 @@ def doHighLight(region):
 def doMouseMoveOff():
     # move mouse off of menu to remove issues with hover text
     mouseMove(mouseOffMenu)
-    sleep(0.125)
+    sleep(0.5)
 
 def iterateGroupSegment(config, state):
     scrollBarRegion = config["scrollBarRegion"]
@@ -439,6 +492,11 @@ def iterateGroupSegment(config, state):
         "alertDialogShown": alertDialogShown,
     }
 
+def pauseMsg(msg):
+    print "Pausing for ", msg
+    answer = popAsk(msg + ", continue")
+    if not answer:
+        exit(1)
 
 def doPause():
     global pauseAtEachIteration
@@ -502,6 +560,8 @@ def doChecks():
         "autoScrolled": autoScrolled,
         "endAtGroup": None,
     }
+
+    respondToAlerts()
     
     actionsRegion.wait(action) # make sure tCore is visible
 
@@ -548,6 +608,60 @@ def getPopupText(region, highlight):
         "region": region,
         "text": text,
     }
+
+def getAlertMessage(alertFound, offsetY):
+    if not alertFound:
+        alertDialogFound = findAllImagesBase(alertRegion, [], alertDialog)
+        if len(alertDialogFound):
+            alertFound = alertDialogFound[0]
+
+    if alertFound:
+        region = Region(alertFound.x + alertFound.w/2 + 62, alertFound.y + alertFound.h/2 + offsetY - 72, messageRegion.w, messageRegion.h)
+        text = getPopupText(region, 2)
+        text["alertFound"] = alertFound
+        return text
+
+    return None
+
+def respondToAlerts():
+    alertFound = None
+    offsetY = 0
+    clicked = True
+    for j in range(4):
+        clicked = False
+
+        for i in range(4):
+            alert = getAlertMessage(alertFound, offsetY)
+            if alert == None:
+                print "No alert found!"
+            else:
+                print "found alert message ", alert
+                alertMsg = alert["text"]
+                if "project in translationNotes could invalidate" in alertMsg:
+                    print "Invalidate Warning"
+                    continue_ = findFirstImage(alertDialogRegion, continueButton)
+                    click(continue_)
+                    clicked = True
+                    break
+
+                if "Changes have been detected in your project" in alertMsg:
+                    print "Changes Detected"
+                    continue_ = findFirstImage(alertDialogRegion, okButton)
+                    click(continue_)
+                    clicked = True
+                    break
+
+                print "Unknown alert found: " + alert["text"]
+
+                alertFound = alert["alertFound"]
+                offsetY = offsetY + 22
+
+        if not clicked:
+            return
+        
+        # if we found a dialog and clicked on it, check for another
+        alertFound = None
+        sleep(1)
 
 def getGlPopupText(launchButton, pos):
     region = getGlPopupAreaFromLaunchButton(launchButton, pos)

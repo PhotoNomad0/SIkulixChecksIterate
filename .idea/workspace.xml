@@ -3,8 +3,6 @@
   <component name="ChangeListManager">
     <list default="true" id="e936a502-317f-4b47-8f5a-4cbf517af585" name="Changes" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/SIkulixChecksIterate.py" beforeDir="false" afterPath="$PROJECT_DIR$/SIkulixChecksIterate.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/checkIterateMain.py" beforeDir="false" afterPath="$PROJECT_DIR$/checkIterateMain.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -89,7 +87,7 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1664877630362</updated>
-      <workItem from="1664877631521" duration="2926000" />
+      <workItem from="1664877631521" duration="3691000" />
     </task>
     <task id="LOCAL-00001" summary="Added check for alert dialog being shown.  Narrowed search area for actions button">
       <created>1664884226156</created>
@@ -112,7 +110,14 @@
       <option name="project" value="LOCAL" />
       <updated>1664932045258</updated>
     </task>
-    <option name="localTasksCounter" value="4" />
+    <task id="LOCAL-00004" summary="added color detection through JRobot">
+      <created>1664976836362</created>
+      <option name="number" value="00004" />
+      <option name="presentableId" value="LOCAL-00004" />
+      <option name="project" value="LOCAL" />
+      <updated>1664976836363</updated>
+    </task>
+    <option name="localTasksCounter" value="5" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -122,7 +127,8 @@
     <MESSAGE value="Added check for alert dialog being shown.  Narrowed search area for actions button" />
     <MESSAGE value="cleanup" />
     <MESSAGE value="preselect groups and language, refactoring" />
-    <option name="LAST_COMMIT_MESSAGE" value="preselect groups and language, refactoring" />
+    <MESSAGE value="added color detection through JRobot" />
+    <option name="LAST_COMMIT_MESSAGE" value="added color detection through JRobot" />
   </component>
   <component name="VgoProject">
     <settings-migrated>true</settings-migrated>
