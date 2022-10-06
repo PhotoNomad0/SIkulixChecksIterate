@@ -297,10 +297,11 @@ def doCheck(config, y):
     colorStr = lookupColor(color.getRGB())
     # print "backbground color ", color, " - ", colorStr
     if ("UNKNOWN" in colorStr):
-        colorArea.highlight()
         message = "Unknown color " + colorStr + " for " + str(color)
-        pauseMsg(message)
-        colorArea.highlightOff()
+        print message
+        # colorArea.highlight()
+        # pauseMsg(message)
+        # colorArea.highlightOff()
 
     click(textArea)
     success_ = verifyNotCrashed(config)
@@ -617,7 +618,7 @@ def getAlertMessage(alertFound, offsetY):
 
     if alertFound:
         region = Region(alertFound.x + alertFound.w/2 + 62, alertFound.y + alertFound.h/2 + offsetY - 72, messageRegion.w, messageRegion.h)
-        text = getPopupText(region, 2)
+        text = getPopupText(region, 0.5)
         text["alertFound"] = alertFound
         return text
 
@@ -665,7 +666,7 @@ def respondToAlerts():
 
 def getGlPopupText(launchButton, pos):
     region = getGlPopupAreaFromLaunchButton(launchButton, pos)
-    results = getPopupText(region, 1)
+    results = getPopupText(region, 0.5)
     return results
         
 def checkAll(launchButton):
@@ -693,7 +694,7 @@ def getFirstLaunchButtonInfo():
     if launchButton_:
         region = getGlTextAreaFromLaunchButton(launchButton_)
         region.highlight()
-        sleep(2)
+        sleep(0.5)
         region.highlightOff()
         text = region.text().strip().encode('UTF-8')
         print "At y=", region.y, " found text: '", text, "'"
@@ -735,7 +736,7 @@ def checkOpenProject(langID):
         if len(projectFolders):
             folder = projectFolders[0]
             region = Region(folder.x + folder.w, folder.y, 150, folder.h, )
-            results = getPopupText(region, 1)
+            results = getPopupText(region, 0.5)
             currentProject = results["text"]
             print "Current Project: ", currentProject
         else:
