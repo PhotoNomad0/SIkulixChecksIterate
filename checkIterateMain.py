@@ -935,16 +935,15 @@ def checkOpenProject(langID):
                 click(toolName)
                 sleep(2)
 
+        finalState["runSingleCheck"] = runSingleCheck
+        finalState["invalidContent"] = invalidContent
         final = "doChecks finished with " + str(finalState)
+        print "Finished testing ", currentProject
+        print "Times= ", times
+        print "Project run time= ", elapsedTime(projectStart)
         print(final)
         choice = popAsk (final)
     else:
         print "Cancelled"
 
-    print "Finished testing ", currentProject
-    print "Times= ", times
-    print "Project run time= ", elapsedTime(projectStart)
-    finalState["runSingleCheck"] = runSingleCheck
-    finalState["invalidContent"] = invalidContent
-    return finalState
 
