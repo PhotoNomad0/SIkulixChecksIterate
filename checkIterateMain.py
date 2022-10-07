@@ -635,7 +635,7 @@ def doChecks():
 
         if newState["invalidContent"]:
             invalidContent = invalidContent + 1
-            print "Invalid content found! Cound now at ", invalidContent
+            print "Invalid content found! Count now at ", invalidContent
 
         doPause()
         
@@ -679,7 +679,7 @@ def getAlertMessage(alertFound, offsetY):
 
     if alertFound:
         region = Region(alertFound.x + alertFound.w/2 + 62, alertFound.y + alertFound.h/2 + offsetY - 72, messageRegion.w, messageRegion.h)
-        text = getPopupText(region, 2)
+        text = getPopupText(region, 0.5)
         text["alertFound"] = alertFound
         print "Alert Found!"
         return text
@@ -828,6 +828,7 @@ def checkOpenProject(langID):
     checkTNotesArray = [True, False]
     finshed = False
     runSingleCheck = False
+    invalidContent = 0
     currentProject = 'Unknown'
     finalState = {}
     projectStart = time.time()
@@ -915,9 +916,13 @@ def checkOpenProject(langID):
 
             finished = finalState["finished"]
             checkFailed = finalState["checkFailed"]
+            if finalState["invalidContent"]:
+                invalidContent = invalidContent + finalState["invalidContent"]
+                print "Found ", finalState["invalidContent"], " invalid checks in tool, total is now ", invalidContent
             elapsed = elapsedTime(toolStart)
             times[toolNameStr] = elapsed
             print "Tool ", toolNameStr, " took ", elapsed
+            print "Final State = ", finalState
             if not finished or checkFailed:
                 print "Checks failed"
                 break
@@ -940,5 +945,6 @@ def checkOpenProject(langID):
     print "Times= ", times
     print "Project run time= ", elapsedTime(projectStart)
     finalState["runSingleCheck"] = runSingleCheck
+    finalState["invalidContent"] = invalidContent
     return finalState
 
