@@ -29,6 +29,7 @@ unchecked = "images/unchecked.png"
 partialChecked = Pattern("images/partialChecked.png").similar(0.92)
 continueButton = "images/continueButton.png"
 okButton = "images/okButton.png"
+ignoreButton = "images/ignore.png"
 
 ################################
 # initial config
@@ -59,6 +60,7 @@ checkDeselectedColor = Color(116,116,116).getRGB()
 groupDeselectedColor = Color(51,51,51).getRGB()
 messageRegion = Region(570,308,499,23)
 alertRegion = Region(360,186,437,550)
+invalidCheckRegion = Region(517,343,598,161)
 highLightTime = 0 # set to zero to disable highlighting, otherwise set to how many seconds you want to wait on a highlight
 page = 0
 running = True
@@ -195,7 +197,7 @@ def findAllImagesBase(region, groups, image):
     while found and found.hasNext():
         match = found.next()
         groups.append(match)
-    print "groups=", len(groups), " found"
+    # print "groups=", len(groups), " found"
     if len(groups):
         groups = sorted(groups, key=by_y_item) # sort keys by y order
     return groups
@@ -291,21 +293,25 @@ def doCheck(config, y):
     text = textArea.text().encode('UTF-8')
     print "At y=", y, " found text: ", text
 
-    # examine color
-    colorArea = Region(textArea.x, textArea.y, 1, 1)
-    color = getColor(colorArea)
-    colorStr = lookupColor(color.getRGB())
-    # print "backbground color ", color, " - ", colorStr
-    if ("UNKNOWN" in colorStr):
-        message = "Unknown color " + colorStr + " for " + str(color)
-        print message
-        # colorArea.highlight()
-        # pauseMsg(message)
-        # colorArea.highlightOff()
+    # # examine color
+    # color, colorStr = getColorAt(textArea)
+    # # print "backbground color ", color, " - ", colorStr
+    # if ("UNKNOWN" in colorStr):
+    #     message = "Unknown color " + colorStr + " for " + str(color)
+    #     print message
+    #     # colorArea.highlight()
+    #     # pauseMsg(message)
+    #     # colorArea.highlightOff()
 
     click(textArea)
     success_ = verifyNotCrashed(config)
     return (success_)
+
+def getColorAt(region):
+    colorArea = Region(region.x, region.y, 1, 1)
+    color = getColor(colorArea)
+    colorStr = lookupColor(color.getRGB())
+    return color,colorStr
 
 def doHighLight(region):
     if highLightTime:
@@ -331,30 +337,31 @@ def iterateGroupSegment(config, state):
     doMouseMoveOff()
     startScrollBar = scrollBarRegion.getScreen().capture(scrollBarRegion)
     print " startScrollBar = ", startScrollBar
+    y = 0
 
     selectedY = region.y
     overScrolled = False
     print "FInding selected group"
-    results = getGroupsFromDisplayedMenu(config)
-    if (results["selected"]):
-        match = results["selected"]["match"]
+    foundGroups = getGroupsFromDisplayedMenu(config)
+    if (foundGroups["selected"]):
+        match = foundGroups["selected"]["match"]
         region_ = Region(37, match.y - 10, 169, 35)
         doHighLight(region_)
         text = region_.text().encode('UTF-8')
         print "Starting at group ", text, " at ", region_
         
-        if (results["collapsed"]):
+        if (foundGroups["collapsed"]):
             print "Expanding selection ", match
             click(match)
             success = verifyNotCrashed(config)
             if not success:
                 print "crashed"
             else:
-                results = getGroupsFromDisplayedMenu(config)
+                foundGroups = getGroupsFromDisplayedMenu(config)
         else:
             print "Already expanded"
     
-        div = results["selected"]["match"]
+        div = foundGroups["selected"]["match"]
         selectedY = div.y + div.h
         print "Starting check is at ", selectedY
     else:
@@ -369,7 +376,7 @@ def iterateGroupSegment(config, state):
     endAtGroup = None
     
     # find end point of checks
-    groups = results["groups"]
+    groups = foundGroups["groups"]
     for group in groups:
         match = group["match"]
         y = match.y
@@ -437,24 +444,53 @@ def iterateGroupSegment(config, state):
     print "Check Y's found: ", steps
     checkFailed = False
 
-    print "Iterating checks, startY= ", startY, ", selectedY= ", selectedY
+    # look ahead for selected check
+    skipTo = 0
     for i in range(0, len(steps)-1):
         y = steps[i]
         centerClickY = y + checkHeight * 0.5
-        print "Clicking on y= ", centerClickY
-        success = doCheck(config, y)
-        if not success:
-            checkFailed = True
+        textArea = Region(32, y - 2, 169, 25)
+        color, colorStr = getColorAt(textArea)
+        # print "Color at y ", y, " is ", colorStr
+        if colorStr == "checkSelectedColor":
+            print "Found highlighted position at ", y
+            skipTo = i
             break
+
+    print "Iterating checks, startY= ", startY, ", selectedY= ", selectedY
+    for i in range(0, len(steps)-1):
+        y = steps[i]
+        if i < skipTo:
+            print "Skipping over y ", y
+
+        else:
+            centerClickY = y + checkHeight * 0.5
+            print "Clicking on y= ", centerClickY
+            success = doCheck(config, y)
+            if not success:
+                checkFailed = True
+                break
 
     autoScrolled = False
     cancelled = False
     finished = False
     scrollbarUnchanged = False
+    invalidContent = False
+
     if running:
+        print "At end of iteration"
         doMouseMoveOff()
-        scrollbarUnchanged = scrollBarRegion.exists(startScrollBar.getFile(), 1)
-        if not scrollbarUnchanged:
+        sleep(1)
+        results = checkForAlerts(True)
+        invalidContent = results["type"] == INVALID_CONTENT
+
+        if not invalidContent:
+            scrollbarUnchanged = scrollBarRegion.exists(startScrollBar.getFile(), 1)
+
+        if invalidContent:
+            print "found Invalid content"
+
+        elif not scrollbarUnchanged:
             print "Scrollbar moved"
             autoScrolled = True
         else:
@@ -466,10 +502,23 @@ def iterateGroupSegment(config, state):
                 atBottom = not bottomScrollRegion.exists(bottomScroll, 1)
                 print "atBottom: " + str(atBottom)
                 if atBottom:
-                    print "Finished - Scrolled to bottom"
-                    global running
-                    running = False
-                    finished = True                
+                    print "double check if there is another group at end. Last check at ", y
+                    endAtGroup = None
+                    for group in groups:
+                        match = group["match"]
+                        print "Checking match at ", match.y
+                        if match.y > y:
+                            endAtGroup = match
+                            break
+
+                    if endAtGroup:
+                        print "Selecting next group = ", endAtGroup
+                        click(endAtGroup)
+                    else:
+                        print "Finished - Scrolled to bottom"
+                        global running
+                        running = False
+                        finished = True                
                 else:
                     scrollClickAt = Region(scrollBarRegion.x, scrollBarRegion.y + scrollBarRegion.h, scrollBarRegion.w, 2)  
                     print "Scrolling down ", scrollClickAt
@@ -480,8 +529,13 @@ def iterateGroupSegment(config, state):
     alertDialogShown = False
     if alertDialogRegion.exists(alertDialog):
         print "Alert Dialog is showing!"
-        alertDialogShown = True
-        checkFailed = True
+        results = checkForAlerts(True)
+        if results["type"] == INVALID_CONTENT:
+            invalidContent = True
+        else:
+            print "fail on other dialog"
+            alertDialogShown = True
+            checkFailed = True
 
     return {
         "scrollbarUnchanged": scrollbarUnchanged,
@@ -491,6 +545,7 @@ def iterateGroupSegment(config, state):
         "cancelled": cancelled,
         "finished": finished,
         "alertDialogShown": alertDialogShown,
+        "invalidContent": invalidContent
     }
 
 def pauseMsg(msg):
@@ -556,6 +611,7 @@ def doChecks():
     pauseAtEachIteration = False
     highLightTime = 0
     newState = {}
+    invalidContent = 0
 
     state = {
         "autoScrolled": autoScrolled,
@@ -577,11 +633,16 @@ def doChecks():
 
         checkFailed = newState["checkFailed"]
 
+        if newState["invalidContent"]:
+            invalidContent = invalidContent + 1
+            print "Invalid content found! Cound now at ", invalidContent
+
         doPause()
         
         state = newState
 
-    print ("Finished with checks, running ", running, ", checkFailed ", checkFailed) 
+    newState["invalidContent"] = invalidContent
+    print ("Finished with checks, running ", running, ", checkFailed ", checkFailed, ", invalid Content Found ", invalidContent) 
     return newState
 
 def getLaunchButtons():
@@ -618,51 +679,96 @@ def getAlertMessage(alertFound, offsetY):
 
     if alertFound:
         region = Region(alertFound.x + alertFound.w/2 + 62, alertFound.y + alertFound.h/2 + offsetY - 72, messageRegion.w, messageRegion.h)
-        text = getPopupText(region, 0.5)
+        text = getPopupText(region, 2)
         text["alertFound"] = alertFound
+        print "Alert Found!"
         return text
 
     return None
 
-def respondToAlerts():
+INVALIDATE_WARNING = "project in translationNotes could invalidate"
+CHANGES_DETECTED = "Changes have been detected in your project"
+INVALID_CONTENT = "content for this check"
+
+def checkForAlerts(respond = True):
+    alert = None
+    clicked = False
+    type = None
     alertFound = None
     offsetY = 0
-    clicked = True
-    for j in range(4):
-        clicked = False
 
-        for i in range(4):
-            alert = getAlertMessage(alertFound, offsetY)
-            if alert == None:
-                print "No alert found!"
-            else:
-                print "found alert message ", alert
-                alertMsg = alert["text"]
-                if "project in translationNotes could invalidate" in alertMsg:
-                    print "Invalidate Warning"
-                    continue_ = findFirstImage(alertDialogRegion, continueButton)
-                    click(continue_)
-                    clicked = True
-                    break
+    for i in range(4):
+        alert = getAlertMessage(alertFound, offsetY)
+        if alert == None:
+            print "No alert found!"
+            break
+        else:
+            print "found alert message ", alert
+            alertMsg = alert["text"]
+            if INVALIDATE_WARNING in alertMsg:
+                print "Invalidate Warning"
+                type = INVALIDATE_WARNING
+                continue_ = findFirstImage(alertDialogRegion, continueButton)
+                click(continue_)
+                clicked = True
+                break
 
-                if "Changes have been detected in your project" in alertMsg:
-                    print "Changes Detected"
-                    continue_ = findFirstImage(alertDialogRegion, okButton)
-                    click(continue_)
-                    clicked = True
-                    break
+            if CHANGES_DETECTED in alertMsg:
+                print "Changes Detected"
+                type = CHANGES_DETECTED
+                continue_ = findFirstImage(alertDialogRegion, okButton)
+                click(continue_)
+                clicked = True
+                break
 
-                print "Unknown alert found: " + alert["text"]
+            if INVALID_CONTENT in alertMsg:
+                print "Invalid Content"
+                type = INVALID_CONTENT
+                text = getPopupText(invalidCheckRegion, 2)
+                print "Invalid check details: ", text
+                continue_ = findFirstImage(alertDialogRegion, ignoreButton)
+                click(continue_)
+                clicked = True
+                break
 
+            print "Unknown alert text: " + alert["text"]
+            if  alert["alertFound"]:
                 alertFound = alert["alertFound"]
-                offsetY = offsetY + 22
+    
+        offsetY = offsetY + 22
 
-        if not clicked:
-            return
-        
-        # if we found a dialog and clicked on it, check for another
-        alertFound = None
+    if clicked:
         sleep(1)
+
+    return {
+        "alert": alertFound,
+        "responded": clicked,
+        "type": type
+    }
+
+def respondToAlerts():
+    alertFound = None
+    type = None
+    invalidContent = 0
+
+    for j in range(4):
+        results = checkForAlerts(True)
+        if results["alert"]:
+            alertFound = results["alert"]
+            type = results["type"]
+            print "Alert type found ", type
+            if type == INVALID_CONTENT:
+                invalidContent = invalidContent + 1
+                print "Found invalid content, count now ", invalidContent
+            # if alert acknowledged, we check for another
+        else:
+            break # nothing more to do
+        
+    return {
+        "alertFound": alertFound,
+        "type": type,
+        "invalidContent": invalidContent
+    }
 
 def getGlPopupText(launchButton, pos):
     region = getGlPopupAreaFromLaunchButton(launchButton, pos)

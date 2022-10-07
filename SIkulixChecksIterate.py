@@ -66,6 +66,7 @@ print opts
 #launchButton = checkIterateMain.getFirstLaunchButton()
 
 
-results = CHK.checkOpenProject('en')
+results = CHK.checkOpenProject('hi')
 print "results = ", results
-print "Total run time= ", checkIterateMain.elapsedTime(start)
+print "Total run time= ", CHK.elapsedTime(start)
+
