@@ -835,8 +835,8 @@ def checkOpenProject(langID):
 
     print "Startup!"
     times = {}
-    choice = popAsk ("Are you ready to start?")
-    if choice:
+    langID = input ("Enter Language (empty for no preference).\nDo CTRL-F12 to abort or CTRL-F11 for options.\nAre you ready to start?", langID)
+    if langID != None:
         sleep(1)
         projectFolders = findAllImagesBase(headerArea, [], projectFolder)
         print ("projectFolders buttons found ", len(projectFolders))
@@ -864,12 +864,13 @@ def checkOpenProject(langID):
             else:
                 currentGL = launchButton_["glText"]
                 wrongGL = False
-                matchLangStr = "(" + langID + ")"
+                # default select en if none selected
+                matchLangStr = "(" + langID + ")"  if (langID != '') else '(en)'
                 print "Matching in GL: ", matchLangStr
                 if currentGL == 'Select Gateway Language':
                     print "No Gl Selected, want ", langID
                     wrongGL = True
-                elif not (matchLangStr in currentGL):
+                elif (langID != '') and (not (matchLangStr in currentGL)):
                     print "Wrong Gl Selected '", currentGL, "', want ", langID
                     wrongGL = True
 
