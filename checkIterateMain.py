@@ -835,7 +835,7 @@ def checkOpenProject(langID):
 
     print "Startup!"
     times = {}
-    langID = input ("Enter Language (empty for no preference).\nOpen Project to tools page or launch tNotes or tWords.\nDo CTRL-F12 to abort or CTRL-F11 for options.\nAre you ready to start?", langID)
+    langID = input ("Enter Language (empty for no preference).\nTo begin, Open Project to tools page or launch tNotes or tWords.\nDo CTRL-F12 to abort or CTRL-F11 for options.\nAre you ready to start?", langID)
     if langID != None:
         sleep(1)
         projectFolders = findAllImagesBase(headerArea, [], projectFolder)
@@ -870,7 +870,7 @@ def checkOpenProject(langID):
                 if currentGL == 'Select Gateway Language':
                     print "No Gl Selected, want ", langID
                     wrongGL = True
-                elif (langID != '') and (not (matchLangStr in currentGL)):
+                elif (langID != '') and (not (matchLangStr.encode('UTF-8') in currentGL)):
                     print "Wrong Gl Selected '", currentGL, "', want ", langID
                     wrongGL = True
 
