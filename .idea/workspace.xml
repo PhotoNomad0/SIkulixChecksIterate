@@ -89,7 +89,7 @@
       <updated>1664877630362</updated>
       <workItem from="1664877631521" duration="5092000" />
       <workItem from="1665097227027" duration="567000" />
-      <workItem from="1665099066133" duration="4252000" />
+      <workItem from="1665099066133" duration="4988000" />
     </task>
     <task id="LOCAL-00001" summary="Added check for alert dialog being shown.  Narrowed search area for actions button">
       <created>1664884226156</created>
@@ -154,7 +154,14 @@
       <option name="project" value="LOCAL" />
       <updated>1665162686825</updated>
     </task>
-    <option name="localTasksCounter" value="10" />
+    <task id="LOCAL-00010" summary="added prompt to select language">
+      <created>1665170005278</created>
+      <option name="number" value="00010" />
+      <option name="presentableId" value="LOCAL-00010" />
+      <option name="project" value="LOCAL" />
+      <updated>1665170005278</updated>
+    </task>
+    <option name="localTasksCounter" value="11" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -170,7 +177,8 @@
     <MESSAGE value="implemented look ahead for current selected check, acknowledgement and counting of invalid checks" />
     <MESSAGE value="fixes for counting of invalid checks" />
     <MESSAGE value="fixes for reporting of total invalid checks" />
-    <option name="LAST_COMMIT_MESSAGE" value="fixes for reporting of total invalid checks" />
+    <MESSAGE value="added prompt to select language" />
+    <option name="LAST_COMMIT_MESSAGE" value="added prompt to select language" />
   </component>
   <component name="VgoProject">
     <settings-migrated>true</settings-migrated>

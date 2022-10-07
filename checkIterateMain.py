@@ -506,7 +506,7 @@ def iterateGroupSegment(config, state):
                     endAtGroup = None
                     for group in groups:
                         match = group["match"]
-                        print "Checking match at ", match.y
+                        # print "Checking match at ", match.y
                         if match.y > y:
                             endAtGroup = match
                             break
@@ -835,7 +835,7 @@ def checkOpenProject(langID):
 
     print "Startup!"
     times = {}
-    langID = input ("Enter Language (empty for no preference).\nDo CTRL-F12 to abort or CTRL-F11 for options.\nAre you ready to start?", langID)
+    langID = input ("Enter Language (empty for no preference).\nOpen Project to tools page or launch tNotes or tWords.\nDo CTRL-F12 to abort or CTRL-F11 for options.\nAre you ready to start?", langID)
     if langID != None:
         sleep(1)
         projectFolders = findAllImagesBase(headerArea, [], projectFolder)
