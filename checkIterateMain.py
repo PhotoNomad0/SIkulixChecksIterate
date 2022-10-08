@@ -313,6 +313,43 @@ def getColorAt(region):
     colorStr = lookupColor(color.getRGB())
     return color,colorStr
 
+def getColorWithin(region, xStep, ystep, matchChecks = True):
+    x = region.x
+    y = region.y
+    xMax = x + region.w
+    yMax = y + region.h
+    notFound = True
+    checks = ["checkSelectedColor", "checkDeselectedColor"]
+
+    while notFound:
+        colorArea = Region(x, y, 1, 1)
+        color, colorStr = getColorAt(colorArea)
+        notUnknown = not "UNKNOWN" in colorStr
+        isCheck = (colorStr in checks)
+        passCheckFilter = (not matchChecks) or isCheck
+        if notUnknown and passCheckFilter:
+            # message = "Found color " + colorStr + " for " + str(color) + " at " + str(colorArea)
+            # print message
+            break
+
+        # message = "Invalid color " + colorStr + " for " + str(color) + " at " + str(colorArea)
+        # print message
+        # colorArea.highlight()
+        # pauseMsg(message)
+        # colorArea.highlightOff()
+        # sleep(1)
+
+        # offset position and try again
+        x = x + xStep
+        y = y + ystep
+        if (x >= xMax) or ( y >= yMax):
+            print("Exceeded (", xMax, ",", yMax, ")")
+            break
+
+    message = "Invalid color " + colorStr + " for " + str(color) + " at " + str(colorArea)
+    print message
+    return color, colorStr
+
 def doHighLight(region):
     if highLightTime:
         region.highlight()
@@ -450,7 +487,7 @@ def iterateGroupSegment(config, state):
         y = steps[i]
         centerClickY = y + checkHeight * 0.5
         textArea = Region(32, y - 2, 169, 25)
-        color, colorStr = getColorAt(textArea)
+        color, colorStr = getColorWithin(textArea, 4, 0)
         # print "Color at y ", y, " is ", colorStr
         if colorStr == "checkSelectedColor":
             print "Found highlighted position at ", y
@@ -689,6 +726,7 @@ def getAlertMessage(alertFound, offsetY):
 INVALIDATE_WARNING = "project in translationNotes could invalidate"
 CHANGES_DETECTED = "Changes have been detected in your project"
 INVALID_CONTENT = "content for this check"
+SELECTIONS_INVALID = 'selections are no longer valid and are removed'
 
 def checkForAlerts(respond = True):
     alert = None
@@ -720,6 +758,15 @@ def checkForAlerts(respond = True):
                 click(continue_)
                 clicked = True
                 break
+
+            if SELECTIONS_INVALID in alertMsg:
+                print "Invalid Selections"
+                type = SELECTIONS_INVALID
+                continue_ = findFirstImage(alertDialogRegion, okButton)
+                click(continue_)
+                clicked = True
+                break
+
 
             if INVALID_CONTENT in alertMsg:
                 print "Invalid Content"
