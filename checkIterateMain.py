@@ -30,6 +30,10 @@ partialChecked = Pattern("images/partialChecked.png").similar(0.92)
 continueButton = "images/continueButton.png"
 okButton = "images/okButton.png"
 ignoreButton = "images/ignore.png"
+menuIcon = Pattern("images/menuIcon.png").similar(0.90)
+selectButton = "images/selectButton.png"
+projectScrollNotAtBottom = Pattern("images/projectScrollNotAtBottom.png").similar(0.90) # 21x34 
+projectScrollNotAtTop = Pattern("images/projectScrollNotAtTop.png").similar(0.90) # 18x43
 
 ################################
 # initial config
@@ -58,9 +62,18 @@ whiteColor = Color(255, 255, 255).getRGB()
 checkSelectedColor = Color(33,150,243).getRGB()
 checkDeselectedColor = Color(116,116,116).getRGB()
 groupDeselectedColor = Color(51,51,51).getRGB()
+disabledButtonColor = Color(117,154,197).getRGB()
 messageRegion = Region(570,308,499,23)
 alertRegion = Region(360,186,437,550)
 invalidCheckRegion = Region(517,343,598,161)
+projectsTitleArea = Region(682,138,69,23)
+projectsListArea = Region(686,162,563,536)
+projectScrollRegion = Region(1230,154,23,541)
+projectScrollBottom = Region(1228, 154+541-36, 27, 40)
+projectScrollTop = Region(1230,154,23,47)
+scrollUp = Region(1234,154,13,22)
+scrollDown = Region(1232,677,19,20)
+
 highLightTime = 0 # set to zero to disable highlighting, otherwise set to how many seconds you want to wait on a highlight
 page = 0
 running = True
@@ -160,7 +173,8 @@ def lookupColor(rgb):
         "whiteColor": whiteColor,
         "checkSelectedColor": checkSelectedColor,
         "checkDeselectedColor": checkDeselectedColor,
-        "groupDeselectedColor": groupDeselectedColor
+        "groupDeselectedColor": groupDeselectedColor,
+        "disabledButtonColor": disabledButtonColor
     }
 
     for key in colorOptions:
@@ -208,6 +222,143 @@ def findFirstImage(region, image):
         found = found[0]
         return found
     return None
+
+def scrollProject(up):
+    region = scrollUp if up else scrollDown
+    # print "Clicking up=", up
+    click(region)
+    sleep(0.125)
+
+def scrollToLimit(up):
+    atlimit = False
+
+    for i in range(10):
+        notAtLimit = atProjectScrollLimit(up)
+        if notAtLimit:
+            # print "scrolling up=", up
+            scrollProject(up)
+        else:
+            # print "At limit up=", up
+            atlimit = True
+            break
+
+    if not atlimit:
+        print "Scroll to limit failed=", up
+
+    return atlimit
+
+def atProjectScrollLimit(up):
+    searchRegion = projectScrollTop if up else projectScrollBottom
+    atLimitImage = projectScrollNotAtTop if up else projectScrollNotAtBottom
+    notAtLimit = findFirstImage(searchRegion, atLimitImage)
+    # print "notAtLimit=", notAtLimit
+    return notAtLimit
+
+def getTitleRegion(menu):
+    # title Region(696,168,511,39)
+    region = Region(696, menu.y, 511,39)
+    return region
+
+def getProjects():
+    print ("Get Projects")
+
+    # scroll to top
+    results = scrollToLimit(True)
+    print "scrollToLimit returned:", results
+    # get list of projects
+    projects = []
+    notAtLimit = True
+
+    while notAtLimit:
+        projectMenus = findAllImagesBase(projectsListArea, [], menuIcon)
+        print "projectMenus found ", len(projectMenus)
+        # menu icon 17x31
+
+        for projectMenu in projectMenus:
+            #cardArea below menu Region(696,299,527,118)
+            selectSearchRange = Region(projectMenu.x - 100, projectMenu.y, 100 + projectMenu.w, 118)
+            # selectSearchRange.highlight()
+            # sleep(2)
+            # selectSearchRange.highlightOff()
+            foundButton = findFirstImage(selectSearchRange, selectButton)
+            if not foundButton:
+                print "Card partially hidden, skipping:", projectMenu
+                break
+            
+            # menuIcon2 = Pattern("menuIcon.png").similar(0.90).targetOffset(-368,-1)
+            titleRegion = getTitleRegion(projectMenu)
+            title = getPopupText(titleRegion, 0.1)["text"]
+            print "title", title
+            if not title in projects:
+                projects.append(title)
+            else:
+                print "Skipping duplicate ", title
+
+        notAtLimit = atProjectScrollLimit(False)
+        if notAtLimit:
+            print "scrolling down"
+            scrollProject(False)
+        else:
+            print "At scroll bottom"
+    
+    return projects
+
+def findProject(project):
+    print ("Find Projects")
+
+    # scroll to top
+    results = scrollToLimit(True)
+    print "scrollToLimit returned:", results
+    notAtLimit = True
+
+    while notAtLimit:
+        projectMenus = findAllImagesBase(projectsListArea, [], menuIcon)
+        print "projectMenus found ", len(projectMenus)
+        # menu icon 17x31
+
+        for projectMenu in projectMenus:
+            #cardArea below menu Region(696,299,527,118)
+            selectSearchRange = getSearchRangeForSelectButton(projectMenu)
+            # selectSearchRange.highlight()
+            # sleep(2)
+            # selectSearchRange.highlightOff()
+            foundButton = findFirstImage(selectSearchRange, selectButton)
+            if not foundButton:
+                print "Card partially hidden, skipping:", projectMenu
+                break
+            
+            # menuIcon2 = Pattern("menuIcon.png").similar(0.90).targetOffset(-368,-1)
+            titleRegion = getTitleRegion(projectMenu)
+            title = getPopupText(titleRegion, 0.1)["text"]
+            print "title", title
+            if project in title:
+                print "found match ", title
+                return projectMenu
+
+        notAtLimit = atProjectScrollLimit(False)
+        if notAtLimit:
+            print "scrolling down"
+            scrollProject(False)
+        else:
+            print "At scroll bottom"
+    
+    print "No match found for ", project
+    return None
+
+def getSearchRangeForSelectButton(projectMenu):
+    selectSearchRange = Region(projectMenu.x - 100, projectMenu.y, 100 + projectMenu.w, 118)
+    return selectSearchRange
+
+def findProjects(match):
+    matches = []
+    projects = getProjects()
+    for project in projects:
+        if match in project:
+            print "found match for ", match, " : ", project
+            matches.append(project)
+    
+    return matches
+
 
 def getGroupsFromDisplayedMenu(config):
     region = config["menuRegion"]
@@ -871,7 +1022,7 @@ def getGlPopupOptions(launchButton, max):
         popups.append(popup)
     return popups
 
-def checkOpenProject(langID):
+def checkOpenProject(langID, autoRun=False):
     checkTNotesArray = [True, False]
     finshed = False
     runSingleCheck = False
@@ -879,10 +1030,12 @@ def checkOpenProject(langID):
     currentProject = 'Unknown'
     finalState = {}
     projectStart = time.time()
+    results = None
 
     print "Startup!"
     times = {}
-    langID = input ("Enter Language (empty for no preference).\nTo begin, Open Project to tools page or launch tNotes or tWords.\nDo CTRL-F12 to abort or CTRL-F11 for options.\nAre you ready to start?", langID)
+    if not autoRun:
+        langID = input ("Enter Language (empty for no preference).\nTo begin, Open Project to tools page or launch tNotes or tWords.\nDo CTRL-F12 to abort or CTRL-F11 for options.\nAre you ready to start?", langID)
     if langID != None:
         sleep(1)
         projectFolders = findAllImagesBase(headerArea, [], projectFolder)
@@ -946,7 +1099,7 @@ def checkOpenProject(langID):
                     print "popup= ", popup
 
                     click(popup["region"])
-                    sleep(1)
+                    sleep(10)
                     launchButton_ = getFirstLaunchButtonInfo()
                     
                 sleep(1)
@@ -990,8 +1143,12 @@ def checkOpenProject(langID):
         print "Times= ", times
         print "Project run time= ", elapsedTime(projectStart)
         print(final)
-        choice = popAsk (final)
+        results = finalState
+        results["times"] = times
+        if not autoRun:
+            choice = popAsk (final)
     else:
         print "Cancelled"
 
+    return results
 
