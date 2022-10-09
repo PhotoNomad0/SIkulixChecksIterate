@@ -2,6 +2,8 @@ from sikuli.Sikuli import *
 import checkIterateMain as CHK
 import time
 import sys
+import json
+from datetime import datetime
 import java.awt.Robot as JRobot
 from java.awt import Color
 myRobot = JRobot()
@@ -97,6 +99,22 @@ def doProjects(matchProject, langID, startAtTop):
 
                     projectResults = CHK.checkOpenProject(langID, startAtTop, True)
                     results[project] = projectResults
+                    print "Cumulative results", results
+
+                    today = datetime.now()
+                    utcDate = today.isoformat()
+                    print 'DateTime:', utcDate
+
+                    utcDate = utcDate.replace(':', '_')
+
+                    fileName = 'log/summary' + utcDate + '.json'
+                    print "Logging to file", fileName
+                    with open(fileName, 'w') as outfile:
+                        json.dump(projectResults, outfile)
+
+                    if not projectResults["finished"] or projectResults["checkFailed"]:
+                        print ("Checking cancelled")
+                        break
 
                     click(projectsButton) # go back to projects
                     sleep(1)
@@ -107,8 +125,9 @@ def doProjects(matchProject, langID, startAtTop):
     else:
         print "Not on Projects page"
         results = CHK.checkOpenProject(langID, startAtTop, True)
+        print ("Finished single project test")
     
-    choice = popAsk (results)
+    choice = popAsk (str(results))
     return results
 
 matchProject = '_ult_'

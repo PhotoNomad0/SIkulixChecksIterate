@@ -550,9 +550,10 @@ def iterateGroupSegment(config, state):
         else:
             print "Already expanded"
     
-        div = foundGroups["selected"]["match"]
-        selectedY = div.y + div.h
-        print "Starting check is at ", selectedY
+        if (foundGroups["selected"]):
+            div = foundGroups["selected"]["match"]
+            selectedY = div.y + div.h
+            print "Starting check is at ", selectedY
     else:
         print "No Selection found"
         if state["endAtGroup"]:
@@ -727,7 +728,7 @@ def iterateGroupSegment(config, state):
             checkFailed = True
 
     return {
-        "scrollbarUnchanged": scrollbarUnchanged,
+        "scrollbarUnchanged": True if scrollbarUnchanged else False,
         "checkFailed": checkFailed,
         "autoScrolled": autoScrolled,
         "endAtGroup": endAtGroup,
@@ -1157,17 +1158,19 @@ def checkOpenProject(langID, startAtTop = False, autoRun=False):
             #################################
             finalState = doChecks(startAtTop)
 
-            finished = finalState["finished"]
-            checkFailed = finalState["checkFailed"]
+            print "finalState=", finalState
+            finished = finalState.get("finished", None)
+            checkFailed = finalState.get("checkFailed", False)
             if finalState["invalidContent"]:
-                invalidContent = invalidContent + finalState["invalidContent"]
-                print "Found ", finalState["invalidContent"], " invalid checks in tool, total is now ", invalidContent
+                invalidContent_ = finalState.get("invalidContent", 0)
+                invalidContent = invalidContent + invalidContent_
+                print "Found ", invalidContent_, " invalid checks in tool, total is now ", invalidContent
             elapsed = elapsedTime(toolStart)
             times[toolNameStr] = elapsed
             print "Tool ", toolNameStr, " took ", elapsed
             print "Final State = ", finalState
             if not finished or checkFailed:
-                print "Checks failed"
+                print ("Checking cancelled")
                 break
             
             if runSingleCheck:
