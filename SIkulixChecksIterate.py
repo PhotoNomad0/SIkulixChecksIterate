@@ -41,8 +41,10 @@ toolButton = Region(1093,46,77,38)
 
 scrollTop = Region(237,53,15,44)
 bottomScroll = "bottomScroll.png"
+menuIcon = Pattern("menuIcon.png").similar(0.80)
 
-def doProjects(matchProject, langID, startAtTop):
+
+def doProjects(matchProject, langID, startAtTop, checkProjects=None):
     langID = input ("Enter Language (empty for no preference).\nTo begin, Open Project to tools page or launch tNotes or tWords.\nDo CTRL-F12 to abort or CTRL-F11 for options.\nAre you ready to start?", langID)
 
     title = CHK.getPopupText(CHK.projectsTitleArea, 0.5)["text"]
@@ -51,7 +53,12 @@ def doProjects(matchProject, langID, startAtTop):
     if len(title) and (title == "Projects"):
         results = {}
         print "On Projects page"
-        matches = CHK.findProjects(matchProject)
+        if checkProjects:
+            print "Testing Specific Projects=", checkProjects
+            matches = checkProjects
+        else:
+            matches = CHK.findProjects(matchProject)
+    
         print "matches ", matches
 
         for project in matches:
@@ -127,13 +134,15 @@ def doProjects(matchProject, langID, startAtTop):
         results = CHK.checkOpenProject(langID, startAtTop, True)
         print ("Finished single project test")
     
-    choice = popAsk (str(results))
+    resultsStr = str(results)[0:180]
+    choice = popAsk (resultsStr)
     return results
 
+checkProjects = None # ['en_ult_luk_book', 'en_ult_mat_book', 'en_ult_mrk_book', 'en_ult_php_book', 'en_ult_rom_book', 'en_ult_rut_book']
 matchProject = '_ult_'
 langID = 'en'
 startAtTop = True
-results = doProjects(matchProject, langID, startAtTop)
+results = doProjects(matchProject, langID, startAtTop, checkProjects)
 print "results = ", results
 print "Total run time= ", CHK.elapsedTime(start)
 

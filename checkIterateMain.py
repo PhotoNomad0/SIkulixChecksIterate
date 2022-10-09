@@ -30,7 +30,7 @@ partialChecked = Pattern("images/partialChecked.png").similar(0.92)
 continueButton = "images/continueButton.png"
 okButton = "images/okButton.png"
 ignoreButton = "images/ignore.png"
-menuIcon = Pattern("images/menuIcon.png").similar(0.90)
+menuIcon = Pattern("images/menuIcon.png").similar(0.80)
 selectButton = "images/selectButton.png"
 projectScrollNotAtBottom = Pattern("images/projectScrollNotAtBottom.png").similar(0.90) # 21x34 
 projectScrollNotAtTop = Pattern("images/projectScrollNotAtTop.png").similar(0.90) # 18x43
@@ -271,6 +271,7 @@ def getProjects():
     notAtLimit = True
 
     while notAtLimit:
+        sleep(0.5)
         projectMenus = findAllImagesBase(projectsListArea, [], menuIcon)
         print "projectMenus found ", len(projectMenus)
         # menu icon 17x31
@@ -279,7 +280,7 @@ def getProjects():
             #cardArea below menu Region(696,299,527,118)
             selectSearchRange = Region(projectMenu.x - 100, projectMenu.y, 100 + projectMenu.w, 118)
             # selectSearchRange.highlight()
-            # sleep(2)
+            # sleep(0.5)
             # selectSearchRange.highlightOff()
             foundButton = findFirstImage(selectSearchRange, selectButton)
             if not foundButton:
@@ -288,8 +289,8 @@ def getProjects():
             
             # menuIcon2 = Pattern("menuIcon.png").similar(0.90).targetOffset(-368,-1)
             titleRegion = getTitleRegion(projectMenu)
-            title = getPopupText(titleRegion, 0.1)["text"]
-            print "title", title
+            title = getPopupText(titleRegion, 0.5)["text"]
+            print "found project title", title
             if not title in projects:
                 projects.append(title)
             else:
@@ -302,6 +303,7 @@ def getProjects():
         else:
             print "At scroll bottom"
     
+    print "Found ", len(projects), " projects: ", projects
     return projects
 
 def findProject(project):
@@ -313,6 +315,7 @@ def findProject(project):
     notAtLimit = True
 
     while notAtLimit:
+        sleep(0.5)
         projectMenus = findAllImagesBase(projectsListArea, [], menuIcon)
         print "projectMenus found ", len(projectMenus)
         # menu icon 17x31
@@ -330,8 +333,8 @@ def findProject(project):
             
             # menuIcon2 = Pattern("menuIcon.png").similar(0.90).targetOffset(-368,-1)
             titleRegion = getTitleRegion(projectMenu)
-            title = getPopupText(titleRegion, 0.1)["text"]
-            print "title", title
+            title = getPopupText(titleRegion, 0.5)["text"]
+            print "Project title Found", title
             if project in title:
                 print "found match ", title
                 return projectMenu
