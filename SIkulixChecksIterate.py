@@ -108,9 +108,9 @@ def doProjects(matchProject, langID, startAtTop):
                     utcDate = utcDate.replace(':', '_')
 
                     fileName = 'log/summary' + utcDate + '.json'
-                    print "Logging to file", fileName
+                    print "Logging cumulative results to file", fileName
                     with open(fileName, 'w') as outfile:
-                        json.dump(projectResults, outfile)
+                        json.dump(results, outfile)
 
                     if not projectResults["finished"] or projectResults["checkFailed"]:
                         print ("Checking cancelled")

@@ -665,20 +665,21 @@ def iterateGroupSegment(config, state):
     cancelled = False
     finished = False
     scrollbarUnchanged = False
-    invalidContent = False
+    invalidContent = []
 
     if running:
         print "At end of iteration"
         doMouseMoveOff()
         sleep(1)
         results = checkForAlerts(True)
-        invalidContent = results["type"] == INVALID_CONTENT
+        invalidContent_ = results["type"] == INVALID_CONTENT
 
-        if not invalidContent:
+        if not invalidContent_:
             scrollbarUnchanged = scrollBarRegion.exists(startScrollBar.getFile(), 1)
 
-        if invalidContent:
+        if invalidContent_:
             print "found Invalid content"
+            invalidContent.append(results["text"])
 
         elif not scrollbarUnchanged:
             print "Scrollbar moved"
@@ -721,7 +722,7 @@ def iterateGroupSegment(config, state):
         print "Alert Dialog is showing!"
         results = checkForAlerts(True)
         if results["type"] == INVALID_CONTENT:
-            invalidContent = True
+            invalidContent.append(results["text"])
         else:
             print "fail on other dialog"
             alertDialogShown = True
@@ -801,7 +802,7 @@ def doChecks(startAtTop=False):
     pauseAtEachIteration = False
     highLightTime = 0
     newState = {}
-    invalidContent = 0
+    invalidContent = []
 
     state = {
         "autoScrolled": autoScrolled,
@@ -855,7 +856,10 @@ def doChecks(startAtTop=False):
     while not checkFailed and running:
         page = page + 1
         print "Starting Group ", page
+
+        #############################################
         newState = iterateGroupSegment(config, state)
+
         print "Group ", page, ", elapsed time ", elapsedTime(start), ", results: ", newState
 
         if not running:
@@ -863,16 +867,17 @@ def doChecks(startAtTop=False):
 
         checkFailed = newState["checkFailed"]
 
-        if newState["invalidContent"]:
-            invalidContent = invalidContent + 1
-            print "Invalid content found! Count now at ", invalidContent
+        invalidContent_ = newState["invalidContent"]
+        if invalidContent_ and len(invalidContent_):
+            invalidContent = invalidContent + invalidContent_
+            print "Invalid content found! Count now at ", len(invalidContent)
 
         doPause()
         
         state = newState
 
     newState["invalidContent"] = invalidContent
-    print ("Finished with checks, running ", running, ", checkFailed ", checkFailed, ", invalid Content Found ", invalidContent) 
+    print ("Finished with checks, running ", running, ", checkFailed ", checkFailed, ", invalid Content Found ", len(invalidContent)) 
     return newState
 
 def getLaunchButtons():
@@ -927,6 +932,7 @@ def checkForAlerts(respond = True):
     type = None
     alertFound = None
     offsetY = 0
+    text = None
 
     for i in range(4):
         alert = getAlertMessage(alertFound, offsetY)
@@ -983,13 +989,14 @@ def checkForAlerts(respond = True):
     return {
         "alert": alertFound,
         "responded": clicked,
-        "type": type
+        "type": type,
+        "text": text
     }
 
 def respondToAlerts():
     alertFound = None
     type = None
-    invalidContent = 0
+    invalidContent = []
 
     for j in range(4):
         results = checkForAlerts(True)
@@ -998,8 +1005,8 @@ def respondToAlerts():
             type = results["type"]
             print "Alert type found ", type
             if type == INVALID_CONTENT:
-                invalidContent = invalidContent + 1
-                print "Found invalid content, count now ", invalidContent
+                invalidContent.append(results["text"])
+                print "Found invalid content, count now ", len(invalidContent)
             # if alert acknowledged, we check for another
         else:
             break # nothing more to do
@@ -1068,7 +1075,7 @@ def checkOpenProject(langID, startAtTop = False, autoRun=False):
     checkTNotesArray = [True, False]
     finshed = False
     runSingleCheck = False
-    invalidContent = 0
+    invalidContent = []
     currentProject = 'Unknown'
     finalState = {}
     projectStart = time.time()
@@ -1161,10 +1168,10 @@ def checkOpenProject(langID, startAtTop = False, autoRun=False):
             print "finalState=", finalState
             finished = finalState.get("finished", None)
             checkFailed = finalState.get("checkFailed", False)
-            if finalState["invalidContent"]:
-                invalidContent_ = finalState.get("invalidContent", 0)
+            invalidContent_ = finalState.get("invalidContent", [])
+            if invalidContent_ and len(invalidContent_):
                 invalidContent = invalidContent + invalidContent_
-                print "Found ", invalidContent_, " invalid checks in tool, total is now ", invalidContent
+                print "Found ", len(invalidContent_), " invalid checks in tool, total is now ", len(invalidContent)
             elapsed = elapsedTime(toolStart)
             times[toolNameStr] = elapsed
             print "Tool ", toolNameStr, " took ", elapsed
