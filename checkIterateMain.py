@@ -15,7 +15,7 @@ start = time.time()
 # images
 
 action = Pattern("images/Running.png")
-bottomScroll = "images/bottomScroll.png"
+bottomScroll = "images/bottomScroll.png" # 11x9
 selectedGroupExpanded = Pattern("images/SelectedGroupExpanded.png").similar(0.83)
 selectedGroupCollapsed = Pattern("images/SelectedGroupCollapsed.png").similar(0.83)
 deselectedGroupCollapsed = Pattern("images/deselectedGroupCollapsed.png").similar(0.83)
@@ -46,11 +46,12 @@ togglesXOffset = -465
 togglesYOffset = -267
 scrollBarRegion = Region(241,54,8,758)
 bottomScrollRegion = Region(scrollBarRegion.x-1, scrollBarRegion.y+scrollBarRegion.h-bottomScrollHeight+8,bottomScrollWidth+2,bottomScrollHeight+2)
+topScrollRegion = Region(scrollBarRegion.x-1, scrollBarRegion.y-2,bottomScrollWidth+2,bottomScrollHeight+2)
 alertDialogRegion = Region(366,193,805,450)
 actionsRegion = Region(765,13,769,50)
 headerArea = Region(0,28,1536,79)
-scrollUp = Location(1241, 188)
-scrollDown = Location(1242, 659)
+scrollToolsUp = Location(1241, 188)
+scrollToolsDown = Location(1242, 659)
 glBox = Region(834,489,217,24)
 toolsArea = Region(686,166,545,533)
 glFirstPopup = Region(854,343,215,27)
@@ -71,8 +72,8 @@ projectsListArea = Region(686,162,563,536)
 projectScrollRegion = Region(1230,154,23,541)
 projectScrollBottom = Region(1228, 154+541-36, 27, 40)
 projectScrollTop = Region(1230,154,23,47)
-scrollUp = Region(1234,154,13,22)
-scrollDown = Region(1232,677,19,20)
+scrollProjectsUp = Region(1234,154,13,22)
+scrollProjectsDown = Region(1232,677,19,20)
 
 highLightTime = 0 # set to zero to disable highlighting, otherwise set to how many seconds you want to wait on a highlight
 page = 0
@@ -224,7 +225,7 @@ def findFirstImage(region, image):
     return None
 
 def scrollProject(up):
-    region = scrollUp if up else scrollDown
+    region = scrollProjectsUp if up else scrollProjectsDown
     # print "Clicking up=", up
     click(region)
     sleep(0.125)
@@ -786,7 +787,7 @@ def elapsedTime(start):
             hours = minutes / 60
             return str(hours) + "hr"
 
-def doChecks():
+def doChecks(startAtTop=False):
     print("Starting Checks...")
     global page
     global running
@@ -809,6 +810,46 @@ def doChecks():
     respondToAlerts()
     
     actionsRegion.wait(action) # make sure tCore is visible
+
+    if startAtTop:
+        print "scrolling to top Check"
+        atlimit = False
+        scrollClickAt = Region(scrollBarRegion.x, scrollBarRegion.y, scrollBarRegion.w, 2) 
+        print "scrollClickAt=", scrollClickAt
+
+        for i in range(100):
+            topScrollRegion.highlight()
+            sleep(0.1)
+            topScrollRegion.highlightOff()
+            print "topScrollRegion=", topScrollRegion
+            atTop = not topScrollRegion.exists(Pattern(bottomScroll).similar(0.85), 1)
+            print "atTop=", atTop
+            if not atTop:
+                print "scrolling up"
+                scrollClickAt.highlight()
+                sleep(0.1)
+                scrollClickAt.highlightOff()
+                click(scrollClickAt)
+            else:
+                print "At limit up"
+                atlimit = True
+                sleep(0.1)
+                # do one more click to be sure, since detection is too sensitive
+                click(scrollClickAt)
+                sleep(0.1)
+                break
+
+        print "atlimit=", atlimit
+
+        foundGroups = getGroupsFromDisplayedMenu(config)
+        groups = foundGroups["groups"]
+        if len(groups):
+            print "Found ", len(groups), ", group, clicking on first"
+            firstGroup = groups[0]
+            match = firstGroup["match"]
+            click(match)
+        else:
+            print "Did not find first group"
 
     while not checkFailed and running:
         page = page + 1
@@ -1022,7 +1063,7 @@ def getGlPopupOptions(launchButton, max):
         popups.append(popup)
     return popups
 
-def checkOpenProject(langID, autoRun=False):
+def checkOpenProject(langID, startAtTop = False, autoRun=False):
     checkTNotesArray = [True, False]
     finshed = False
     runSingleCheck = False
@@ -1051,9 +1092,9 @@ def checkOpenProject(langID, autoRun=False):
 
         for checkTNotes in checkTNotesArray:
             if checkTNotes:
-                click(scrollUp)
+                click(scrollToolsUp)
             else:
-                click(scrollDown)
+                click(scrollToolsDown)
             sleep(2)
 
             
@@ -1113,7 +1154,8 @@ def checkOpenProject(langID, autoRun=False):
             
             toolStart = time.time()
 
-            finalState = doChecks()
+            #################################
+            finalState = doChecks(startAtTop)
 
             finished = finalState["finished"]
             checkFailed = finalState["checkFailed"]

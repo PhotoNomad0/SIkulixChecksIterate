@@ -14,18 +14,39 @@ start = time.time()
 
 tn = "images/tnLabel.png"
 
+# # test scroll bottom
+# running = True
+# while running:
+#    region = CHK.topScrollRegion
+#    region = Region(region.x, region.y-4, region.w, region.h)
+#    print "region=", region
+#    region.highlight()
+#    sleep(2)
+#    region.highlightOff()
+#    atTop = not region.exists(Pattern(CHK.bottomScroll).similar(0.85), 1)
+#    status = "atTop: " + str(atTop)
+#    print status
+#    ok = popAsk(status + ", continue?")
+
+#    if not ok:        
+#        print "Cancelled"
+#        exit()
+
+# exit()
+
 projectsButton = Region(694,47,159,33)
 toolButton = Region(1093,46,77,38)
 
-matchProject = '_ult_'
-langID = 'en'
-def doProjects(matchProject, langID):
+scrollTop = Region(237,53,15,44)
+bottomScroll = "bottomScroll.png"
+
+def doProjects(matchProject, langID, startAtTop):
     langID = input ("Enter Language (empty for no preference).\nTo begin, Open Project to tools page or launch tNotes or tWords.\nDo CTRL-F12 to abort or CTRL-F11 for options.\nAre you ready to start?", langID)
 
     title = CHK.getPopupText(CHK.projectsTitleArea, 0.5)["text"]
     results = None
 
-    if len(title):
+    if len(title) and (title == "Projects"):
         results = {}
         print "On Projects page"
         matches = CHK.findProjects(matchProject)
@@ -74,7 +95,7 @@ def doProjects(matchProject, langID):
                     # if not choice:
                     #     return None
 
-                    projectResults = CHK.checkOpenProject(langID, True)
+                    projectResults = CHK.checkOpenProject(langID, startAtTop, True)
                     results[project] = projectResults
 
                     click(projectsButton) # go back to projects
@@ -85,12 +106,15 @@ def doProjects(matchProject, langID):
     
     else:
         print "Not on Projects page"
-        results = CHK.checkOpenProject(langID)
+        results = CHK.checkOpenProject(langID, startAtTop, True)
     
     choice = popAsk (results)
     return results
 
-results = doProjects(matchProject, langID)
+matchProject = '_ult_'
+langID = 'en'
+startAtTop = True
+results = doProjects(matchProject, langID, startAtTop)
 print "results = ", results
 print "Total run time= ", CHK.elapsedTime(start)
 
