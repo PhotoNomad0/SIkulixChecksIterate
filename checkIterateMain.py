@@ -26,10 +26,12 @@ alertDialog = Pattern("images/alertDialog.png").similar(0.58)
 projectFolder = "images/projectFolder.png"
 launchButton = Pattern("images/launchButton.png").similar(0.86)
 unchecked = "images/unchecked.png"
-partialChecked = Pattern("images/partialChecked.png").similar(0.92)
+# tn catagories
+partialChecked = Pattern("images/partialChecked.png").similar(0.90)
 continueButton = "images/continueButton.png"
 okButton = "images/okButton.png"
 ignoreButton = "images/ignore.png"
+# project cards
 menuIcon = Pattern("images/menuIcon.png").similar(0.80)
 selectButton = "images/selectButton.png"
 projectScrollNotAtBottom = Pattern("images/projectScrollNotAtBottom.png").similar(0.90) # 21x34 
@@ -1037,6 +1039,7 @@ def checkAll(launchButton):
         print "buttons ", buttons
         for button in buttons:
             button.click()
+            sleep(0.25)
 
 def getFirstLaunchButton():
     launches = getLaunchButtons()

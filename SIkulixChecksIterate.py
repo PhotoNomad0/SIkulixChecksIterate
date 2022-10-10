@@ -11,7 +11,9 @@ start = time.time()
 
 # run with:
 #java -jar %HOMEPATH%\Development\SikulixIDE\sikulixide-2.0.5.jar -c -r %HOMEPATH%\Development\SikulixTesting\SIkulixChecksIterate.sikuli     
-            
+
+partialChecked = Pattern("partialChecked.png").similar(0.90)
+           
 
 # langID = 'hi'
 # launchButton_ = CHK.getFirstLaunchButtonInfo()
@@ -122,7 +124,7 @@ def doProjects(matchProject, langID, startAtTop, checkProjects=None):
     return results
 
 # matches  ['en_ult_1co_book', 'en_ult_2co_book', 'en_ult_act_book', 'en_ult_est_book', 'en_ult_exo_book', 'en_ult_heb_book', 'en_ult_jdg_book', 'en_ult_jhn_book', 'en_ult_jos_book', 'en_ult_luk_book', 'en_ult_mat_book', 'en_ult_mrk_book', 'en_ult_php_book', 'en_ult_rom_book', 'en_ult_rut_book']
-checkProjects = [ 'en_ult_exo_book', 'en_ult_heb_book', 'en_ult_jdg_book', 'en_ult_jhn_book', 'en_ult_jos_book', 'en_ult_luk_book', 'en_ult_mat_book', 'en_ult_mrk_book', 'en_ult_php_book', 'en_ult_rom_book', 'en_ult_rut_book']
+checkProjects = [ 'en_ult_heb_book', 'en_ult_jdg_book', 'en_ult_jhn_book', 'en_ult_jos_book', 'en_ult_luk_book', 'en_ult_mat_book', 'en_ult_mrk_book', 'en_ult_php_book', 'en_ult_rom_book', 'en_ult_rut_book']
 matchProject = '_ult_'
 langID = 'en'
 startAtTop = True
