@@ -34,6 +34,7 @@ menuIcon = Pattern("images/menuIcon.png").similar(0.80)
 selectButton = "images/selectButton.png"
 projectScrollNotAtBottom = Pattern("images/projectScrollNotAtBottom.png").similar(0.90) # 21x34 
 projectScrollNotAtTop = Pattern("images/projectScrollNotAtTop.png").similar(0.90) # 18x43
+glDropDown = Pattern("images/glDropDown.png").similar(0.80)
 
 ################################
 # initial config
@@ -289,7 +290,7 @@ def getProjects():
             
             # menuIcon2 = Pattern("menuIcon.png").similar(0.90).targetOffset(-368,-1)
             titleRegion = getTitleRegion(projectMenu)
-            title = getPopupText(titleRegion, 0.5)["text"]
+            title = getTextAt(titleRegion, 0.5)["text"]
             print "found project title", title
             if not title in projects:
                 projects.append(title)
@@ -333,7 +334,7 @@ def findProject(project):
             
             # menuIcon2 = Pattern("menuIcon.png").similar(0.90).targetOffset(-368,-1)
             titleRegion = getTitleRegion(projectMenu)
-            title = getPopupText(titleRegion, 0.5)["text"]
+            title = getTextAt(titleRegion, 0.5)["text"]
             print "Project title Found", title
             if project in title:
                 print "found match ", title
@@ -896,7 +897,7 @@ def getGlPopupAreaFromLaunchButton(launchButton, pos):
     glBoxActual = Region(launchButton.x + launchButton.w/2 - 337, launchButton.y + launchButton.h/2 + (glBox.h+8)*pos - 4, glBox.w + 40, glBox.h)
     return glBoxActual
 
-def getPopupText(region, highlight):
+def getTextAt(region, highlight):
     if highlight:
         region.highlight()
         sleep(highlight)
@@ -917,7 +918,7 @@ def getAlertMessage(alertFound, offsetY):
 
     if alertFound:
         region = Region(alertFound.x + alertFound.w/2 + 62, alertFound.y + alertFound.h/2 + offsetY - 72, messageRegion.w, messageRegion.h)
-        text = getPopupText(region, 0.5)
+        text = getTextAt(region, 0.5)
         text["alertFound"] = alertFound
         print "Alert Found!"
         return text
@@ -973,7 +974,7 @@ def checkForAlerts(respond = True):
             if INVALID_CONTENT in alertMsg:
                 print "Invalid Content"
                 type = INVALID_CONTENT
-                details = getPopupText(invalidCheckRegion, 2)
+                details = getTextAt(invalidCheckRegion, 2)
                 text = details["text"]
                 print "Invalid check details: ", text
                 continue_ = findFirstImage(alertDialogRegion, ignoreButton)
@@ -1023,7 +1024,7 @@ def respondToAlerts():
 
 def getGlPopupText(launchButton, pos):
     region = getGlPopupAreaFromLaunchButton(launchButton, pos)
-    results = getPopupText(region, 0.5)
+    results = getTextAt(region, 0.5)
     return results
         
 def checkAll(launchButton):
@@ -1096,7 +1097,7 @@ def checkOpenProject(langID, startAtTop = False, autoRun=False):
         if len(projectFolders):
             folder = projectFolders[0]
             region = Region(folder.x + folder.w, folder.y, 150, folder.h, )
-            results = getPopupText(region, 0.5)
+            results = getTextAt(region, 0.5)
             currentProject = results["text"]
             print "Current Project: ", currentProject
         else:
@@ -1108,52 +1109,13 @@ def checkOpenProject(langID, startAtTop = False, autoRun=False):
             else:
                 click(scrollToolsDown)
             sleep(2)
-
             
             launchButton_ = getFirstLaunchButtonInfo()
             if not launchButton_:
                 print "Launch button not found, try starting checking"
                 runSingleCheck = True
             else:
-                currentGL = launchButton_["glText"]
-                wrongGL = False
-                # default select en if none selected
-                matchLangStr = "(" + langID + ")"  if (langID != '') else '(en)'
-                print "Matching in GL: ", matchLangStr
-                if currentGL == 'Select Gateway Language':
-                    print "No Gl Selected, want ", langID
-                    wrongGL = True
-                elif (langID != '') and (not (matchLangStr.encode('UTF-8') in currentGL)):
-                    print "Wrong Gl Selected '", currentGL, "', want ", langID
-                    wrongGL = True
-
-                if wrongGL:
-                    click(launchButton_["glTextArea"])
-                    sleep(1)
-                    popups = getGlPopupOptions(launchButton_["launchButton"], 6)
-                    print "popups= ", popups
-                    pos = -1
-                    glOptionRange = None
-                    for i in range(len(popups)):
-                        print i
-                        popup = popups[i]
-                        glText = popup["text"]
-                        print "Found popup option ", glText
-                        if matchLangStr in glText:
-                            print "found Match at ", i
-                            pos = i
-                            break
-
-                    if pos < 0:
-                        print "Match not found, default to 0"
-                        pos = 0
-
-                    popup = popups[pos]
-                    print "popup= ", popup
-
-                    click(popup["region"])
-                    sleep(10)
-                    launchButton_ = getFirstLaunchButtonInfo()
+                launchButton_ = selectGL(langID, launchButton_)
                     
                 sleep(1)
                 checkAll(launchButton_["launchButton"])
@@ -1207,4 +1169,65 @@ def checkOpenProject(langID, startAtTop = False, autoRun=False):
         print "Cancelled"
 
     return results
+
+def selectGL(langID, launchButtonInfo):
+    currentGL = launchButtonInfo["glText"]
+    wrongGL = False
+                # default select en if none selected
+    matchLangStr = "(" + langID + ")"  if (langID != '') else '(en)'
+    matchLangStr = matchLangStr.encode('UTF-8')
+    print "Matching in GL: ", matchLangStr
+    if currentGL == 'Select Gateway Language':
+        print "No Gl Selected, want ", langID
+        wrongGL = True
+    elif (langID != '') and (not (matchLangStr in currentGL)):
+        print "Wrong Gl Selected '", currentGL, "', want ", langID
+        wrongGL = True
+
+    if wrongGL:
+        click(launchButtonInfo["glTextArea"])
+        sleep(1)
+        launchButton = launchButtonInfo["launchButton"]
+        popups = getGlPopupOptions(launchButton, 6)
+        print "popups= ", popups
+        pos = -1
+        glOptionRange = None
+        for i in range(len(popups)):
+            print "checking GL", i
+            popup = popups[i]
+            glText = popup["text"]
+            print "Found popup option ", glText
+            if matchLangStr in glText:
+                print "found Match at ", i
+                pos = i
+                break
+
+        if pos < 0:
+            print "Match not found, default to 0"
+            pos = 0
+
+        popup = popups[pos]
+        print "popup= ", popup
+
+        click(popup["region"])
+
+        # wait for popup to clear - looking for gl drop down
+        dropDownRegion = Region(
+            launchButton.x + launchButton.w/2 - 337 + 215,
+            launchButton.y + launchButton.h/2 - 4 - 4,
+            glBox.w + 40 - 220,
+            glBox.h + 8
+            )
+
+        for j in range(100):
+            dropDownRegion.highlight()
+            sleep(1)
+            dropDownRegion.highlight()
+            if dropDownRegion.exists(glDropDown, 1):
+                print "GL changed"
+                break
+
+        sleep(10)
+        launchButtonInfo = getFirstLaunchButtonInfo()
+    return launchButtonInfo
 

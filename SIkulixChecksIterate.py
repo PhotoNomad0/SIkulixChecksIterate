@@ -12,28 +12,11 @@ start = time.time()
 # run with:
 #java -jar %HOMEPATH%\Development\SikulixIDE\sikulixide-2.0.5.jar -c -r %HOMEPATH%\Development\SikulixTesting\SIkulixChecksIterate.sikuli     
             
-# exit()
 
-tn = "images/tnLabel.png"
-
-# # test scroll bottom
-# running = True
-# while running:
-#    region = CHK.topScrollRegion
-#    region = Region(region.x, region.y-4, region.w, region.h)
-#    print "region=", region
-#    region.highlight()
-#    sleep(2)
-#    region.highlightOff()
-#    atTop = not region.exists(Pattern(CHK.bottomScroll).similar(0.85), 1)
-#    status = "atTop: " + str(atTop)
-#    print status
-#    ok = popAsk(status + ", continue?")
-
-#    if not ok:        
-#        print "Cancelled"
-#        exit()
-
+# langID = 'hi'
+# launchButton_ = CHK.getFirstLaunchButtonInfo()
+# print launchButton_
+# CHK.selectGL(langID, launchButton_)
 # exit()
 
 projectsButton = Region(694,47,159,33)
@@ -47,7 +30,7 @@ menuIcon = Pattern("menuIcon.png").similar(0.80)
 def doProjects(matchProject, langID, startAtTop, checkProjects=None):
     langID = input ("Enter Language (empty for no preference).\nTo begin, Open Project to tools page or launch tNotes or tWords.\nDo CTRL-F12 to abort or CTRL-F11 for options.\nAre you ready to start?", langID)
 
-    title = CHK.getPopupText(CHK.projectsTitleArea, 0.5)["text"]
+    title = CHK.getTextAt(CHK.projectsTitleArea, 0.5)["text"]
     results = None
 
     if len(title) and (title == "Projects"):
@@ -94,7 +77,7 @@ def doProjects(matchProject, langID, startAtTop, checkProjects=None):
                     toolsOpen = False
 
                     while not toolsOpen:
-                        title_ = CHK.getPopupText(CHK.projectsTitleArea, 0.5)["text"]
+                        title_ = CHK.getTextAt(CHK.projectsTitleArea, 0.5)["text"]
                         print "Found title: ", title_
                         if title_ == "Tools":
                             print "On Tools Page"
