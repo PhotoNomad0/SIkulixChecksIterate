@@ -2,7 +2,9 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="e936a502-317f-4b47-8f5a-4cbf517af585" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/SIkulixChecksIterate.py" beforeDir="false" afterPath="$PROJECT_DIR$/SIkulixChecksIterate.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/checkIterateMain.py" beforeDir="false" afterPath="$PROJECT_DIR$/checkIterateMain.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -92,7 +94,7 @@
       <updated>1664877630362</updated>
       <workItem from="1664877631521" duration="5092000" />
       <workItem from="1665097227027" duration="567000" />
-      <workItem from="1665099066133" duration="20272000" />
+      <workItem from="1665099066133" duration="21051000" />
     </task>
     <task id="LOCAL-00001" summary="Added check for alert dialog being shown.  Narrowed search area for actions button">
       <created>1664884226156</created>
@@ -220,7 +222,21 @@
       <option name="project" value="LOCAL" />
       <updated>1665347462301</updated>
     </task>
-    <option name="localTasksCounter" value="19" />
+    <task id="LOCAL-00019" summary="updated README.md">
+      <created>1665347648663</created>
+      <option name="number" value="00019" />
+      <option name="presentableId" value="LOCAL-00019" />
+      <option name="project" value="LOCAL" />
+      <updated>1665347648663</updated>
+    </task>
+    <task id="LOCAL-00020" summary="updated README.md">
+      <created>1665347778521</created>
+      <option name="number" value="00020" />
+      <option name="presentableId" value="LOCAL-00020" />
+      <option name="project" value="LOCAL" />
+      <updated>1665347778521</updated>
+    </task>
+    <option name="localTasksCounter" value="21" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -256,7 +272,8 @@
     <MESSAGE value="fixes for run all" />
     <MESSAGE value="fixes to return actual invalid checks as an array" />
     <MESSAGE value="fix for projects list missing names - slowed down stepping, lowered similar for menu icon" />
-    <option name="LAST_COMMIT_MESSAGE" value="fix for projects list missing names - slowed down stepping, lowered similar for menu icon" />
+    <MESSAGE value="updated README.md" />
+    <option name="LAST_COMMIT_MESSAGE" value="updated README.md" />
   </component>
   <component name="VgoProject">
     <settings-migrated>true</settings-migrated>

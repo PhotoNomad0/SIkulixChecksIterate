@@ -973,7 +973,8 @@ def checkForAlerts(respond = True):
             if INVALID_CONTENT in alertMsg:
                 print "Invalid Content"
                 type = INVALID_CONTENT
-                text = getPopupText(invalidCheckRegion, 2)
+                details = getPopupText(invalidCheckRegion, 2)
+                text = details["text"]
                 print "Invalid check details: ", text
                 continue_ = findFirstImage(alertDialogRegion, ignoreButton)
                 click(continue_)
