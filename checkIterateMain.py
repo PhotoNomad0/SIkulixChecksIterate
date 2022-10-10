@@ -1112,6 +1112,8 @@ def checkOpenProject(langID, startAtTop = False, autoRun=False):
             else:
                 click(scrollToolsDown)
             sleep(2)
+
+            toolNameStr = toolName.text().strip().encode('UTF-8')
             
             launchButton_ = getFirstLaunchButtonInfo()
             if not launchButton_:
@@ -1119,14 +1121,16 @@ def checkOpenProject(langID, startAtTop = False, autoRun=False):
                 runSingleCheck = True
             else:
                 launchButton_ = selectGL(langID, launchButton_)
-                    
+                if launchButton_.get("noGLs", False):
+                    print "NO GLs, so skipping Tool ", toolNameStr
+                    continue
+
                 sleep(1)
                 checkAll(launchButton_["launchButton"])
 
                 click(launchButton_["launchButton"])
                 sleep(1)
                 
-            toolNameStr = toolName.text().strip().encode('UTF-8')
             print "Running tool '", toolNameStr, "'"
             
             toolStart = time.time()
@@ -1183,6 +1187,10 @@ def selectGL(langID, launchButtonInfo):
     if currentGL == 'Select Gateway Language':
         print "No Gl Selected, want ", langID
         wrongGL = True
+    elif currentGL == 'None available':
+        print "No GLs available"
+        launchButtonInfo["noGLs"] = True
+        wrongGL = False
     elif (langID != '') and (not (matchLangStr in currentGL)):
         print "Wrong Gl Selected '", currentGL, "', want ", langID
         wrongGL = True
@@ -1232,5 +1240,6 @@ def selectGL(langID, launchButtonInfo):
 
         sleep(10)
         launchButtonInfo = getFirstLaunchButtonInfo()
+
     return launchButtonInfo
 
