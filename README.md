@@ -6,5 +6,5 @@
 
 TODO:
 - improve text recognition in tools window - pass in font size?
-- wait on switch of GL while resources loaded
-- 
+- improve toggling of checks
+
