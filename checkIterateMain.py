@@ -1088,6 +1088,7 @@ def checkOpenProject(langID, startAtTop = False, autoRun=False):
     finalState = {}
     projectStart = time.time()
     results = None
+    toolResults = {}
 
     print "Startup!"
     times = {}
@@ -1107,13 +1108,14 @@ def checkOpenProject(langID, startAtTop = False, autoRun=False):
             print "no project folders found"
 
         for checkTNotes in checkTNotesArray:
+            toolName_ = None
             if checkTNotes:
                 click(scrollToolsUp)
+                toolName_ = 'tNotes'
             else:
                 click(scrollToolsDown)
+                toolName_ = 'tWords'
             sleep(2)
-
-            toolNameStr = toolName.text().strip().encode('UTF-8')
             
             launchButton_ = getFirstLaunchButtonInfo()
             if not launchButton_:
@@ -1122,7 +1124,7 @@ def checkOpenProject(langID, startAtTop = False, autoRun=False):
             else:
                 launchButton_ = selectGL(langID, launchButton_)
                 if launchButton_.get("noGLs", False):
-                    print "NO GLs, so skipping Tool ", toolNameStr
+                    print "NO GLs, so skipping Tool ", toolName_
                     continue
 
                 sleep(1)
@@ -1131,7 +1133,8 @@ def checkOpenProject(langID, startAtTop = False, autoRun=False):
                 click(launchButton_["launchButton"])
                 sleep(1)
                 
-            print "Running tool '", toolNameStr, "'"
+            toolNameStr = toolName.text().strip().encode('UTF-8')
+            print "Running tool ", toolName_, " found string ", toolNameStr, "'"
             
             toolStart = time.time()
 
@@ -1139,6 +1142,7 @@ def checkOpenProject(langID, startAtTop = False, autoRun=False):
             finalState = doChecks(startAtTop)
 
             print "finalState=", finalState
+            finalState["toolText"] = toolNameStr
             finished = finalState.get("finished", None)
             checkFailed = finalState.get("checkFailed", False)
             invalidContent_ = finalState.get("invalidContent", [])
@@ -1146,8 +1150,9 @@ def checkOpenProject(langID, startAtTop = False, autoRun=False):
                 invalidContent = invalidContent + invalidContent_
                 print "Found ", len(invalidContent_), " invalid checks in tool, total is now ", len(invalidContent)
             elapsed = elapsedTime(toolStart)
-            times[toolNameStr] = elapsed
-            print "Tool ", toolNameStr, " took ", elapsed
+            times[toolName_] = elapsed
+            toolResults[toolName_] = finalState
+            print "Tool ", toolName_, " took ", elapsed
             print "Final State = ", finalState
             if not finished or checkFailed:
                 print ("Checking cancelled")
@@ -1161,20 +1166,27 @@ def checkOpenProject(langID, startAtTop = False, autoRun=False):
                 click(toolName)
                 sleep(2)
 
-        finalState["runSingleCheck"] = runSingleCheck
-        finalState["invalidContent"] = invalidContent
-        final = "doChecks finished with " + str(finalState)
+        results["runSingleCheck"] = runSingleCheck
+        results["invalidContent"] = invalidContent
+        results["toolResults"] = toolResults
+
+        totalTime = elapsedTime(projectStart)
+        times["totalTime"] = totalTime
+        results["times"] = times
+
         print "Finished testing ", currentProject
         print "Times= ", times
-        print "Project run time= ", elapsedTime(projectStart)
+        print "Project run time= ", totalTime
+
+        final = "doChecks finished with " + str(results)
         print(final)
-        results = finalState
-        results["times"] = times
+
         if not autoRun:
             choice = popAsk (final)
     else:
         print "Cancelled"
 
+    results["toolResults"] = toolResults
     return results
 
 def selectGL(langID, launchButtonInfo):
