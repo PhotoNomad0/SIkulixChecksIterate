@@ -1,12 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <project version="4">
   <component name="ChangeListManager">
-    <list default="true" id="e936a502-317f-4b47-8f5a-4cbf517af585" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/README.md" beforeDir="false" afterPath="$PROJECT_DIR$/README.md" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/SIkulixChecksIterate.py" beforeDir="false" afterPath="$PROJECT_DIR$/SIkulixChecksIterate.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/checkIterateMain.py" beforeDir="false" afterPath="$PROJECT_DIR$/checkIterateMain.py" afterDir="false" />
-    </list>
+    <list default="true" id="e936a502-317f-4b47-8f5a-4cbf517af585" name="Changes" comment="" />
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
@@ -95,7 +90,7 @@
       <updated>1664877630362</updated>
       <workItem from="1664877631521" duration="5092000" />
       <workItem from="1665097227027" duration="567000" />
-      <workItem from="1665099066133" duration="26327000" />
+      <workItem from="1665099066133" duration="26739000" />
     </task>
     <task id="LOCAL-00001" summary="Added check for alert dialog being shown.  Narrowed search area for actions button">
       <created>1664884226156</created>
@@ -279,7 +274,14 @@
       <option name="project" value="LOCAL" />
       <updated>1665484246626</updated>
     </task>
-    <option name="localTasksCounter" value="27" />
+    <task id="LOCAL-00027" summary="moved doProjects">
+      <created>1665492408028</created>
+      <option name="number" value="00027" />
+      <option name="presentableId" value="LOCAL-00027" />
+      <option name="project" value="LOCAL" />
+      <updated>1665492408028</updated>
+    </task>
+    <option name="localTasksCounter" value="28" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -321,7 +323,8 @@
     <MESSAGE value="fix for tN check all in catagory" />
     <MESSAGE value="fix no GL's available, then skip test" />
     <MESSAGE value="improvements to save results of each tool" />
-    <option name="LAST_COMMIT_MESSAGE" value="improvements to save results of each tool" />
+    <MESSAGE value="moved doProjects" />
+    <option name="LAST_COMMIT_MESSAGE" value="moved doProjects" />
   </component>
   <component name="VgoProject">
     <settings-migrated>true</settings-migrated>
