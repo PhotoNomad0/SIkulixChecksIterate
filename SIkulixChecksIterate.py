@@ -12,8 +12,9 @@ start = time.time()
 # run with:
 #java -jar %HOMEPATH%\Development\SikulixIDE\sikulixide-2.0.5.jar -c -r %HOMEPATH%\Development\SikulixTesting\SIkulixChecksIterate.sikuli     
 
-partialChecked = Pattern("partialChecked.png").similar(0.90)
-           
+partialChecked = Pattern("partialChecked.png").similar(0.92)
+fullyChecked = Pattern("fullyChecked.png").similar(0.92)
+unchecked = "unchecked.png"
 
 # langID = 'hi'
 # launchButton_ = CHK.getFirstLaunchButtonInfo()
@@ -21,114 +22,16 @@ partialChecked = Pattern("partialChecked.png").similar(0.90)
 # CHK.selectGL(langID, launchButton_)
 # exit()
 
-projectsButton = Region(694,47,159,33)
-toolButton = Region(1093,46,77,38)
-
-scrollTop = Region(237,53,15,44)
 bottomScroll = "bottomScroll.png"
 menuIcon = Pattern("menuIcon.png").similar(0.80)
 
-
-def doProjects(matchProject, langID, startAtTop, checkProjects=None):
-    langID = input ("Enter Language (empty for no preference).\nTo begin, Open Project to tools page or launch tNotes or tWords.\nDo CTRL-F12 to abort or CTRL-F11 for options.\nAre you ready to start?", langID)
-
-    title = CHK.getTextAt(CHK.projectsTitleArea, 0.5)["text"]
-    results = None
-
-    if len(title) and (title == "Projects"):
-        results = {}
-        print "On Projects page"
-        if checkProjects:
-            print "Testing Specific Projects=", checkProjects
-            matches = checkProjects
-        else:
-            matches = CHK.findProjects(matchProject)
-    
-        print "matches ", matches
-
-        for project in matches:
-            # choice = popAsk ("Do you want to search for "+project+"?")
-            # if not choice:
-            #     break
-
-            menuIcon = CHK.findProject(project)
-            print project, ", menuIcon=", menuIcon
-
-            if menuIcon:
-                print "Found Project ", project
-                selectButtonSearchRange = CHK.getSearchRangeForSelectButton(menuIcon)
-                foundButton = CHK.findFirstImage(selectButtonSearchRange, CHK.selectButton)
-                if foundButton:
-
-                    colorArea = Region(foundButton.x + 15, foundButton.y + 15, 1, 1)
-                    colorArea.highlight()
-                    sleep(1)
-                    colorArea.highlightOff()
-                    color, colorStr = CHK.getColorAt(colorArea)
-                    print "Color found:", colorStr, color
-
-                    # choice = popAsk ("button has color " + str(color) + colorStr + ", continue?")
-                    # if not choice:
-                    #     return None
-
-                    if colorStr == "disabledButtonColor":
-                        click(toolButton) # already selected, so just click on tools
-                    else:
-                        click(foundButton)
-
-                    toolsOpen = False
-
-                    while not toolsOpen:
-                        title_ = CHK.getTextAt(CHK.projectsTitleArea, 0.5)["text"]
-                        print "Found title: ", title_
-                        if title_ == "Tools":
-                            print "On Tools Page"
-                            toolsOpen = True
-
-                    # choice = popAsk ("on tools page, continue?")
-                    # if not choice:
-                    #     return None
-
-                    projectResults = CHK.checkOpenProject(langID, startAtTop, True)
-                    results[project] = projectResults
-                    print "Cumulative results", results
-
-                    today = datetime.now()
-                    utcDate = today.isoformat()
-                    print 'DateTime:', utcDate
-
-                    utcDate = utcDate.replace(':', '_')
-
-                    fileName = 'log/summary' + utcDate + '.json'
-                    print "Logging cumulative results to file", fileName
-                    with open(fileName, 'w') as outfile:
-                        json.dump(results, outfile)
-
-                    if not projectResults["finished"] or projectResults["checkFailed"]:
-                        print ("Checking cancelled")
-                        break
-
-                    click(projectsButton) # go back to projects
-                    sleep(1)
-
-                else:
-                    print "Could not find select Button"
-    
-    else:
-        print "Not on Projects page"
-        results = CHK.checkOpenProject(langID, startAtTop, True)
-        print ("Finished single project test")
-    
-    resultsStr = str(results)[0:180]
-    choice = popAsk (resultsStr)
-    return results
 
 # matches  ['en_ult_1co_book', 'en_ult_2co_book', 'en_ult_act_book', 'en_ult_est_book', 'en_ult_exo_book', 'en_ult_heb_book', 'en_ult_jdg_book', 'en_ult_jhn_book', 'en_ult_jos_book', 'en_ult_luk_book', 'en_ult_mat_book', 'en_ult_mrk_book', 'en_ult_php_book', 'en_ult_rom_book', 'en_ult_rut_book']
 checkProjects = [ 'en_ult_mrk_book', 'en_ult_php_book', 'en_ult_rom_book', 'en_ult_rut_book']
 matchProject = '_ult_'
 langID = 'en'
 startAtTop = True
-results = doProjects(matchProject, langID, startAtTop, checkProjects)
+results = CHK.doProjects(matchProject, langID, startAtTop, checkProjects)
 print "results = ", results
 print "Total run time= ", CHK.elapsedTime(start)
 

@@ -8,6 +8,9 @@ import java.awt.Robot as JRobot
 from java.awt import Color
 
 import time
+import json
+from datetime import datetime
+
 #import utils
 start = time.time()
 
@@ -25,9 +28,9 @@ afterSelectedDivider = "images/afterSelectedDivider.png"
 alertDialog = Pattern("images/alertDialog.png").similar(0.58)
 projectFolder = "images/projectFolder.png"
 launchButton = Pattern("images/launchButton.png").similar(0.86)
-unchecked = "images/unchecked.png"
 # tn catagories
-partialChecked = Pattern("images/partialChecked.png").similar(0.90)
+unchecked = "images/unchecked.png"
+partialChecked = Pattern("images/partialChecked.png").similar(0.92)
 continueButton = "images/continueButton.png"
 okButton = "images/okButton.png"
 ignoreButton = "images/ignore.png"
@@ -77,6 +80,9 @@ projectScrollBottom = Region(1228, 154+541-36, 27, 40)
 projectScrollTop = Region(1230,154,23,47)
 scrollProjectsUp = Region(1234,154,13,22)
 scrollProjectsDown = Region(1232,677,19,20)
+projectsButton = Region(694,47,159,33)
+toolButton = Region(1093,46,77,38)
+scrollTop = Region(237,53,15,44)
 
 highLightTime = 0 # set to zero to disable highlighting, otherwise set to how many seconds you want to wait on a highlight
 page = 0
@@ -267,8 +273,8 @@ def getProjects():
     print ("Get Projects")
 
     # scroll to top
-    results = scrollToLimit(True)
-    print "scrollToLimit returned:", results
+    scrollResults = scrollToLimit(True)
+    print "scrollToLimit returned:", scrollResults
     # get list of projects
     projects = []
     notAtLimit = True
@@ -313,8 +319,8 @@ def findProject(project):
     print ("Find Projects")
 
     # scroll to top
-    results = scrollToLimit(True)
-    print "scrollToLimit returned:", results
+    scrollResults = scrollToLimit(True)
+    print "scrollToLimit returned:", scrollResults
     notAtLimit = True
 
     while notAtLimit:
@@ -360,7 +366,7 @@ def findProjects(match):
     matches = []
     projects = getProjects()
     for project in projects:
-        if match in project:
+        if not match or (match in project):
             print "found match for ", match, " : ", project
             matches.append(project)
     
@@ -735,10 +741,10 @@ def iterateGroupSegment(config, state):
             checkFailed = True
 
     return {
-        "scrollbarUnchanged": True if scrollbarUnchanged else False,
+        "scrollbarUnchanged": bool(scrollbarUnchanged),
         "checkFailed": checkFailed,
         "autoScrolled": autoScrolled,
-        "endAtGroup": endAtGroup,
+        "endAtGroup": bool(endAtGroup),
         "cancelled": cancelled,
         "finished": finished,
         "alertDialogShown": alertDialogShown,
@@ -1029,17 +1035,29 @@ def getGlPopupText(launchButton, pos):
     results = getTextAt(region, 0.5)
     return results
         
-def checkAll(launchButton):
+def checkAllCatagories(launchButton):
     checkArea = Region(launchButton.x + launchButton.w/2 + togglesXOffset, launchButton.y + togglesYOffset, launchButton.w/2 - togglesXOffset, -togglesYOffset)
     #checkArea.highlight()
     #sleep(5)
     for image in [partialChecked, unchecked]:
-        print "image ", image
+        imageStr = "partialChecked" if image == partialChecked else "unchecked"
         buttons = findAllImagesBase(checkArea, [], image)
-        print "buttons ", buttons
+        # print "buttons ", buttons
         for button in buttons:
+            print "Found ", imageStr, "button at", image, ", clicking"
             button.click()
-            sleep(0.25)
+            sleep(0.5)
+
+    # double check
+    for image in [partialChecked, unchecked]:
+        imageStr = "partialChecked" if image == partialChecked else "unchecked"
+        buttons = findAllImagesBase(checkArea, [], image)
+        # print "buttons ", buttons
+        for button in buttons:
+            msg = "Found " + imageStr + " button at " + image + " try again"
+            pauseMsg(msg)
+            button.click()
+            sleep(0.5)
 
 def getFirstLaunchButton():
     launches = getLaunchButtons()
@@ -1081,16 +1099,15 @@ def getGlPopupOptions(launchButton, max):
 
 def checkOpenProject(langID, startAtTop = False, autoRun=False):
     checkTNotesArray = [True, False]
-    finshed = False
     runSingleCheck = False
     invalidContent = []
     currentProject = 'Unknown'
     finalState = {}
     projectStart = time.time()
-    results = None
+    results = {}
     toolResults = {}
 
-    print "Startup!"
+    print "Startup - checking open project!"
     times = {}
     if not autoRun:
         langID = input ("Enter Language (empty for no preference).\nTo begin, Open Project to tools page or launch tNotes or tWords.\nDo CTRL-F12 to abort or CTRL-F11 for options.\nAre you ready to start?", langID)
@@ -1101,8 +1118,8 @@ def checkOpenProject(langID, startAtTop = False, autoRun=False):
         if len(projectFolders):
             folder = projectFolders[0]
             region = Region(folder.x + folder.w, folder.y, 150, folder.h, )
-            results = getTextAt(region, 0.5)
-            currentProject = results["text"]
+            textResults = getTextAt(region, 0.5)
+            currentProject = textResults["text"]
             print "Current Project: ", currentProject
         else:
             print "no project folders found"
@@ -1128,20 +1145,23 @@ def checkOpenProject(langID, startAtTop = False, autoRun=False):
                     continue
 
                 sleep(1)
-                checkAll(launchButton_["launchButton"])
+
+                ########################
+                # make sure all catagories checked
+                checkAllCatagories(launchButton_["launchButton"])
 
                 click(launchButton_["launchButton"])
                 sleep(1)
                 
             toolNameStr = toolName.text().strip().encode('UTF-8')
             print "Running tool ", toolName_, " found string ", toolNameStr, "'"
-            
+
             toolStart = time.time()
 
             #################################
             finalState = doChecks(startAtTop)
 
-            print "finalState=", finalState
+            print "finalState of project =", finalState
             finalState["toolText"] = toolNameStr
             finished = finalState.get("finished", None)
             checkFailed = finalState.get("checkFailed", False)
@@ -1158,6 +1178,7 @@ def checkOpenProject(langID, startAtTop = False, autoRun=False):
                 print ("Checking cancelled")
                 break
             
+            results["finished"] = finished
             if runSingleCheck:
                 print "Just ran a single check"
                 break
@@ -1255,3 +1276,96 @@ def selectGL(langID, launchButtonInfo):
 
     return launchButtonInfo
 
+def doProjects(matchProject, langID, startAtTop, checkProjects=None):
+    langID = input ("Enter Language (empty for no preference).\nTo begin, Open Project to tools page or launch tNotes or tWords.\nDo CTRL-F12 to abort or CTRL-F11 for options.\nAre you ready to start?", langID)
+
+    title = getTextAt(projectsTitleArea, 0.5)["text"]
+    results = None
+
+    if len(title) and ("Projects" in title):
+        results = {}
+        print "On Projects page"
+        if checkProjects:
+            print "Testing Specific Projects=", checkProjects
+            matches = checkProjects
+        else:
+            matches = findProjects(matchProject)
+    
+        print "matches ", matches
+
+        for project in matches:
+            # choice = popAsk ("Do you want to search for "+project+"?")
+            # if not choice:
+            #     break
+
+            menuIcon = findProject(project)
+            print project, ", menuIcon=", menuIcon
+
+            if menuIcon:
+                print "Found Project ", project
+                selectButtonSearchRange = getSearchRangeForSelectButton(menuIcon)
+                foundButton = findFirstImage(selectButtonSearchRange, selectButton)
+                if foundButton:
+
+                    colorArea = Region(foundButton.x + 15, foundButton.y + 15, 1, 1)
+                    colorArea.highlight()
+                    sleep(1)
+                    colorArea.highlightOff()
+                    color, colorStr = getColorAt(colorArea)
+                    print "Color found:", colorStr, color
+
+                    # choice = popAsk ("button has color " + str(color) + colorStr + ", continue?")
+                    # if not choice:
+                    #     return None
+
+                    if colorStr == "disabledButtonColor":
+                        click(toolButton) # already selected, so just click on tools
+                    else:
+                        click(foundButton)
+
+                    toolsOpen = False
+
+                    while not toolsOpen:
+                        title_ = getTextAt(projectsTitleArea, 0.5)["text"]
+                        print "Found title: ", title_
+                        if title_ == "Tools":
+                            print "On Tools Page"
+                            toolsOpen = True
+
+                    # choice = popAsk ("on tools page, continue?")
+                    # if not choice:
+                    #     return None
+
+                    projectResults = checkOpenProject(langID, startAtTop, True)
+                    results[project] = projectResults
+                    print "Cumulative results", results
+
+                    today = datetime.now()
+                    utcDate = today.isoformat()
+                    print 'DateTime:', utcDate
+
+                    utcDate = utcDate.replace(':', '_')
+
+                    fileName = 'log/summary' + utcDate + '.json'
+                    print "Logging cumulative results to file", fileName
+                    with open(fileName, 'w') as outfile:
+                        json.dump(results, outfile)
+
+                    if not projectResults.get("finished", False) or projectResults.get("checkFailed", False):
+                        print ("Checking cancelled")
+                        break
+
+                    click(projectsButton) # go back to projects
+                    sleep(1)
+
+                else:
+                    print "Could not find select Button"
+    
+    else:
+        print "Not on Projects page"
+        results = checkOpenProject(langID, startAtTop, True)
+        print ("Finished single project test")
+    
+    resultsStr = str(results)[0:180]
+    choice = popAsk (resultsStr)
+    return results
